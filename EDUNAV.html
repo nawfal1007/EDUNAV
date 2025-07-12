@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKD EduNav - Simulasi Profesional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .page { display: none; animation: fadeIn 0.5s ease-out; }
+        .active-page { display: block; }
+        .nav-button { transition: all 0.2s ease-in-out; }
+        .nav-button-current { background-color: #4f46e5; color: white; transform: scale(1.1); box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39); }
+        .nav-button-answered { background-color: #16a34a; color: white; }
+        .modal { transition: opacity 0.3s ease; }
+        .modal-content { transition: all 0.3s ease-out; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUpFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .credit-item { animation: slideUpFadeIn 0.5s ease-out forwards; opacity: 0; }
+        .gemini-button {
+            background: linear-gradient(90deg, #4f46e5, #818cf8);
+            border: none;
+            color: white;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Halaman Login -->
+    <div id="login-page" class="page min-h-screen flex items-center justify-center bg-gray-100 p-4">
+        <div class="max-w-md w-full bg-white shadow-2xl rounded-2xl p-8 space-y-6">
+            <div class="text-center">
+                <h1 class="text-3xl font-extrabold text-gray-900">SKD EduNav</h1>
+                <p class="mt-2 text-gray-600">Selamat Datang, Pejuang Abdi Negara!</p>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="sr-only">Username</label>
+                    <input type="text" id="username" placeholder="Username" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required>
+                </div>
+                <div>
+                    <label for="password" class="sr-only">Password</label>
+                    <input type="password" id="password" placeholder="Password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all shadow-lg hover:shadow-xl text-lg">
+                    Masuk
+                </button>
+                <div id="login-error" class="text-red-500 text-sm text-center pt-2 hidden"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Homepage / Dashboard -->
+    <div id="home-page" class="page p-4 sm:p-8 max-w-4xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-800">Dasbor EduNav</h1>
+            <p class="text-lg text-gray-500 mt-2">Siap untuk tantangan berikutnya?</p>
+        </header>
+        <div class="text-center mb-10">
+            <button id="start-new-test-button" class="bg-indigo-600 text-white font-bold py-4 px-10 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all shadow-lg hover:shadow-xl text-xl">
+                Mulai Simulasi Baru
+            </button>
+        </div>
+        
+        <!-- Fitur Gemini: Generator Soal Latihan -->
+        <div id="gemini-practice-section" class="bg-white p-6 rounded-2xl shadow-lg mb-10">
+            <h3 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-600">✨</span>
+                Asah Kemampuan dengan AI
+            </h3>
+            <p class="text-gray-600 mb-4">Masukkan contoh soal yang Anda anggap sulit, dan AI kami akan membuatkan soal latihan serupa untuk Anda.</p>
+            <textarea id="gemini-prompt-input" class="w-full p-3 border border-gray-300 rounded-lg h-24" placeholder="Contoh: Semua A adalah B. Sebagian C adalah A. Kesimpulannya..."></textarea>
+            <button id="generate-practice-button" class="mt-3 w-full gemini-button font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity">
+                Buat Soal Latihan (Segera Hadir)
+            </button>
+        </div>
+
+        <div id="history-section">
+            <h2 class="text-2xl font-bold mb-4">Riwayat Pengerjaan</h2>
+            <div id="history-list" class="space-y-3"></div>
+            <div id="no-history" class="text-center py-10 px-6 bg-white rounded-lg shadow-sm">
+                <p class="text-gray-500">Anda belum memiliki riwayat pengerjaan.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Ujian -->
+    <div id="test-page" class="page w-full max-w-6xl p-4 md:p-6 mx-auto">
+        <div class="bg-white shadow-xl rounded-2xl">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-2xl">
+                <h2 class="text-xl font-bold text-gray-800"><span id="category-title"></span></h2>
+                <div class="text-lg font-semibold bg-red-100 text-red-700 px-4 py-1 rounded-md"><span id="timer"></span></div>
+            </div>
+            <div class="p-6">
+                <p class="text-lg font-semibold text-gray-800 mb-2">Soal No. <span id="question-number"></span></p>
+                <p id="question-text" class="text-gray-700 leading-relaxed text-lg"></p>
+                <div id="options-container" class="grid grid-cols-1 gap-3 mt-6"></div>
+                
+                <!-- Navigasi Sebelumnya & Berikutnya -->
+                <div class="flex justify-between mt-8">
+                    <button id="prev-question-button" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                        Sebelumnya
+                    </button>
+                    <button id="next-question-button" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        Berikutnya
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                    </button>
+                </div>
+                
+                <div id="feedback-section" class="mt-6 space-y-4">
+                    <button id="hint-button" class="text-sm text-indigo-600 font-semibold hover:underline">Tampilkan Petunjuk</button>
+                    <div id="hint-box" class="hidden p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded-r-lg"></div>
+                    <div id="pembahasan-box" class="hidden p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg">
+                        <h4 class="font-bold">Pembahasan:</h4>
+                        <p id="pembahasan-text"></p>
+                    </div>
+                     <div id="tkp-analysis-section" class="hidden">
+                        <button id="tkp-analysis-button" class="w-full gemini-button font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">
+                            ✨ Analisis Jawaban TKP Anda (Segera Hadir)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 rounded-b-2xl">
+                <h3 class="font-semibold mb-4 text-center">Navigasi Soal</h3>
+                <div id="navigation-grid" class="grid grid-cols-10 sm:grid-cols-15 md:grid-cols-20 gap-2"></div>
+                <div class="mt-6 text-center">
+                    <button id="finish-test-button" class="bg-green-600 text-white font-bold py-3 px-8 rounded-md hover:bg-green-700">Selesaikan Ujian</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Hasil -->
+    <div id="results-page" class="page min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white shadow-2xl rounded-2xl p-8 max-w-2xl w-full text-center">
+            <div id="result-summary"></div>
+            <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button id="go-to-home-button" class="w-full bg-gray-700 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors">Kembali ke Homepage</button>
+                <a id="send-whatsapp-button" href="#" target="_blank" class="block w-full bg-green-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-600 transition-colors">Kirim Hasil via WhatsApp</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Halaman Riwayat Detail -->
+    <div id="history-detail-page" class="page w-full max-w-6xl p-4 md:p-6 mx-auto">
+        <div class="bg-white shadow-xl rounded-2xl p-6">
+            <h2 class="text-3xl font-extrabold mb-2">Detail Riwayat Ujian</h2>
+            <p id="history-detail-date" class="text-gray-500 mb-6"></p>
+            <div id="history-detail-summary" class="mb-6"></div>
+            <div id="history-detail-questions" class="space-y-8"></div>
+            <div class="text-center mt-8">
+                 <button onclick="showPage('home')" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700">Kembali ke Homepage</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Konfirmasi, Kredit & Info -->
+    <div id="confirm-modal" class="modal hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4 opacity-0">
+        <div class="modal-content bg-white shadow-lg rounded-xl p-8 max-w-sm w-full text-center transform scale-95 opacity-0">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Konfirmasi Penyelesaian</h3>
+            <p class="text-gray-600 mb-6">Apakah Anda yakin ingin menyelesaikan ujian?</p>
+            <div class="flex justify-center gap-4">
+                <button id="confirm-modal-no" class="px-8 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300">Batal</button>
+                <button id="confirm-modal-yes" class="px-8 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700">Ya, Selesaikan</button>
+            </div>
+        </div>
+    </div>
+    <div id="credits-modal" class="modal hidden fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 p-4 opacity-0">
+        <div class="modal-content text-white max-w-md w-full text-center transform scale-95 opacity-0">
+            <h2 class="text-4xl font-bold mb-2">Tim Pengembang EduNav</h2>
+            <p class="text-indigo-300 mb-8">Dipersembahkan oleh para pegiat pendidikan.</p>
+            <div class="space-y-4 text-left mx-auto max-w-xs">
+                <div class="credit-item" style="animation-delay: 0.1s;"><p class="text-indigo-400 text-sm">Lead Team</p><h3 class="text-2xl font-semibold">Nawfal Rozan Firstly Affandy</h3></div>
+                <div class="credit-item" style="animation-delay: 0.2s;"><p class="text-indigo-400 text-sm">Lead Developer</p><h3 class="text-2xl font-semibold">Baskara Wijaya</h3></div>
+                <div class="credit-item" style="animation-delay: 0.3s;"><p class="text-indigo-400 text-sm">UI/UX Designer</p><h3 class="text-2xl font-semibold">Adinda Kirana</h3></div>
+                <div class="credit-item" style="animation-delay: 0.4s;"><p class="text-indigo-400 text-sm">Content & Soal Specialist</p><h3 class="text-2xl font-semibold">Candra Nugroho</h3></div>
+                <div class="credit-item" style="animation-delay: 0.5s;"><p class="text-indigo-400 text-sm">Quality Assurance</p><h3 class="text-2xl font-semibold">Rizki Amelia</h3></div>
+            </div>
+            <button id="close-credits-button" class="mt-10 bg-indigo-500 text-white px-6 py-2 rounded-full hover:bg-indigo-600">Lanjutkan</button>
+        </div>
+    </div>
+    <div id="info-modal" class="modal hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4 opacity-0">
+        <div class="modal-content bg-white shadow-lg rounded-xl p-8 max-w-sm w-full text-center transform scale-95 opacity-0">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Info</h3>
+            <p class="text-gray-600 mb-6">Fitur AI ini akan segera hadir untuk memberikan pengalaman belajar yang lebih personal!</p>
+            <button id="close-info-modal" class="px-8 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700">Mengerti</button>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Bank Soal SKD (100 Soal) ---
+        const questions = [
+            // --- TWK (30 Soal) ---
+            { category: "TWK", question: "Pancasila sebagai ideologi terbuka memiliki 3 dimensi nilai. Nilai yang merupakan penjabaran dari nilai dasar ideologi sehingga menjadi lebih operasional dan eksplisit adalah nilai...", options: { A: "Dasar", B: "Instrumental", C: "Praksis", D: "Idealisme", E: "Normatif" }, answer: "B", hint: "Pikirkan tentang 'instrumen' atau alat untuk melaksanakan nilai dasar.", pembahasan: "Nilai Instrumental adalah penjabaran lebih lanjut dari nilai-nilai dasar ideologi Pancasila, biasanya dalam bentuk UUD 1945, Tap MPR, dan peraturan perundang-undangan lainnya." },
+            { category: "TWK", question: "Salah satu ciri negara hukum adalah adanya supremasi hukum (supremacy of law). Makna dari supremasi hukum adalah...", options: { A: "Hukum berada di atas segalanya dan berlaku untuk semua orang tanpa terkecuali.", B: "Hukum dibuat oleh lembaga legislatif.", C: "Adanya jaminan hak asasi manusia oleh hukum.", D: "Hanya hukum yang boleh mengatur kehidupan bernegara.", E: "Setiap orang dianggap tahu hukum." }, answer: "A", hint: "Kata 'supremasi' berarti 'berada di posisi tertinggi'.", pembahasan: "Supremasi hukum berarti bahwa semua individu dan lembaga, termasuk negara itu sendiri, tunduk pada hukum dan tidak ada yang berada di atas hukum." },
+            { category: "TWK", question: "Perjanjian yang mengakhiri konfrontasi Indonesia-Malaysia dikenal sebagai...", options: { A: "Perjanjian Bangkok", B: "Perjanjian Jakarta", C: "Perjanjian Manila", D: "Persetujuan Kuala Lumpur", E: "Deklarasi ASEAN" }, answer: "B", hint: "Perjanjian ini ditandatangani di ibu kota Indonesia.", pembahasan: "Persetujuan Jakarta (Jakarta Accord) yang ditandatangani pada 11 Agustus 1966 secara resmi mengakhiri konfrontasi antara Indonesia dan Malaysia." },
+            { category: "TWK", question: "Lembaga negara yang dihapuskan setelah amandemen UUD 1945 adalah...", options: { A: "Dewan Pertimbangan Agung (DPA)", B: "Dewan Perwakilan Rakyat (DPR)", C: "Mahkamah Agung (MA)", D: "Komisi Yudisial (KY)", E: "Badan Pemeriksa Keuangan (BPK)" }, answer: "A", hint: "Lembaga ini dulunya berfungsi sebagai penasihat presiden.", pembahasan: "Dewan Pertimbangan Agung (DPA) dihapuskan melalui Amandemen Keempat UUD 1945 pada tahun 2002 karena fungsinya dianggap tidak lagi relevan dalam sistem ketatanegaraan yang baru." },
+            { category: "TWK", question: "Konsep 'Archipelagic State' atau Negara Kepulauan bagi Indonesia secara resmi diakui oleh dunia internasional melalui...", options: { A: "Deklarasi Djuanda", B: "Konferensi Meja Bundar (KMB)", C: "Konvensi Hukum Laut PBB (UNCLOS) 1982", D: "Perjanjian Linggarjati", E: "Konferensi Asia-Afrika" }, answer: "C", hint: "Pengakuan ini datang dari sebuah konvensi PBB tentang hukum laut.", pembahasan: "UNCLOS 1982 di Montego Bay, Jamaika, adalah forum internasional yang secara resmi mengakui konsep Negara Kepulauan (Archipelagic State) yang telah diperjuangkan Indonesia sejak Deklarasi Djuanda 1957." },
+            { category: "TWK", question: "Paham yang menganggap bahwa kesetiaan tertinggi setiap pribadi harus diserahkan kepada negara kebangsaan adalah...", options: { A: "Nasionalisme", B: "Chauvinisme", C: "Liberalisme", D: "Sosialisme", E: "Patriotisme" }, answer: "A", hint: "Ini adalah tentang rasa cinta dan kesetiaan pada bangsa dan negara.", pembahasan: "Nasionalisme adalah suatu paham yang menciptakan dan mempertahankan kedaulatan sebuah negara dengan mewujudkan satu konsep identitas bersama untuk sekelompok manusia yang mempunyai tujuan atau cita-cita yang sama dalam mewujudkan kepentingan nasional." },
+            { category: "TWK", question: "Tujuan negara Indonesia yang terkait dengan perdamaian dunia tercantum dalam Pembukaan UUD 1945 alinea ke...", options: { A: "Satu", B: "Dua", C: "Tiga", D: "Empat", E: "Lima" }, answer: "D", hint: "Alinea ini juga memuat dasar negara Pancasila.", pembahasan: "Tujuan negara untuk 'ikut melaksanakan ketertiban dunia yang berdasarkan kemerdekaan, perdamaian abadi dan keadilan sosial' tercantum jelas dalam alinea keempat Pembukaan UUD 1945." },
+            { category: "TWK", question: "Sistem Demokrasi Terpimpin yang pernah berlaku di Indonesia didasarkan pada...", options: { A: "Tap MPR No. III/MPR/2000", B: "Maklumat Wapres No. X", C: "Dekrit Presiden 5 Juli 1959", D: "Supersemar", E: "UUDS 1950" }, answer: "C", hint: "Peristiwa ini menandai kembalinya Indonesia ke UUD 1945.", pembahasan: "Dekrit Presiden 5 Juli 1959 membubarkan Konstituante, menyatakan berlakunya kembali UUD 1945, dan menjadi awal dari era Demokrasi Terpimpin di bawah Presiden Soekarno." },
+            { category: "TWK", question: "Bela negara bagi warga negara tidak hanya berarti mengangkat senjata, tetapi juga mencakup sikap dan perilaku yang dijiwai oleh kecintaan kepada NKRI. Hal ini merupakan definisi bela negara secara...", options: { A: "Fisik", B: "Militer", C: "Non-fisik", D: "Formal", E: "Tradisional" }, answer: "C", hint: "Ini adalah bentuk bela negara dalam kehidupan sehari-hari.", pembahasan: "Bela negara secara non-fisik dapat diwujudkan dengan berbagai cara, seperti menaati hukum, membayar pajak, menjaga kerukunan, dan meningkatkan keahlian untuk kemajuan bangsa." },
+            { category: "TWK", question: "Perwujudan nilai-nilai Pancasila dalam bidang politik diwujudkan dalam sistem yang mengutamakan...", options: { A: "Kekuasaan mayoritas", B: "Kepentingan golongan", C: "Otoritas pemimpin", D: "Musyawarah untuk mufakat", E: "Kebebasan individu mutlak" }, answer: "D", hint: "Ini adalah ciri khas demokrasi Pancasila.", pembahasan: "Sistem politik yang sesuai dengan Pancasila adalah demokrasi yang mengutamakan musyawarah untuk mufakat dalam mengambil keputusan, yang mencerminkan sila keempat." },
+            { category: "TWK", question: "Organisasi pergerakan nasional pertama yang bersifat modern di Indonesia adalah...", options: { A: "Sarekat Islam", B: "Indische Partij", C: "Budi Utomo", D: "Perhimpunan Indonesia", E: "Partai Nasional Indonesia" }, answer: "C", hint: "Berdirinya organisasi ini pada 20 Mei diperingati sebagai Hari Kebangkitan Nasional.", pembahasan: "Budi Utomo, didirikan pada 20 Mei 1908, dianggap sebagai organisasi pergerakan nasional pertama karena memiliki struktur organisasi yang modern dan tujuan yang jelas, meskipun awalnya terbatas pada bidang pendidikan dan kebudayaan." },
+            { category: "TWK", question: "Dalam UUD 1945, pasal yang mengatur tentang kebebasan memeluk agama dan beribadat menurut agamanya adalah...", options: { A: "Pasal 27 ayat 1", B: "Pasal 28E ayat 1", C: "Pasal 29 ayat 2", D: "Pasal 30 ayat 1", E: "Pasal 31 ayat 1" }, answer: "B", hint: "Pasal ini berada dalam bab tentang Hak Asasi Manusia.", pembahasan: "Pasal 28E ayat (1) UUD 1945 menyatakan, 'Setiap orang bebas memeluk agama dan beribadat menurut agamanya, memilih pendidikan dan pengajaran, memilih pekerjaan, memilih kewarganegaraan, memilih tempat tinggal di wilayah negara dan meninggalkannya, serta berhak kembali.'" },
+            { category: "TWK", question: "Fungsi legislasi yang dimiliki oleh DPR adalah...", options: { A: "Menetapkan APBN", B: "Mengawasi jalannya pemerintahan", C: "Membentuk undang-undang", D: "Memberikan persetujuan duta dan konsul", E: "Memilih anggota BPK" }, answer: "C", hint: "Legislasi berasal dari kata 'lex' yang berarti hukum atau undang-undang.", pembahasan: "DPR memiliki tiga fungsi utama: legislasi (membentuk UU bersama Presiden), anggaran (menetapkan APBN), dan pengawasan (mengawasi pelaksanaan UU dan APBN oleh pemerintah)." },
+            { category: "TWK", question: "Patriotisme adalah sikap rela berkorban segala-galanya termasuk nyawa sekalipun untuk...", options: { A: "Kepentingan pribadi", B: "Kepentingan golongan", C: "Mempertahankan kejayaan bangsa dan negara", D: "Menjaga nama baik keluarga", E: "Mencari kekuasaan" }, answer: "C", hint: "Patriotisme adalah turunan dari nasionalisme yang lebih fokus pada aksi pengorbanan.", pembahasan: "Patriotisme adalah sikap kesediaan untuk berkorban demi bangsa dan negara. Ini adalah implementasi dari rasa cinta tanah air (nasionalisme)." },
+            { category: "TWK", question: "Indonesia pernah menjadi tuan rumah Konferensi Asia-Afrika pada tahun 1955 yang diselenggarakan di kota...", options: { A: "Jakarta", B: "Bogor", C: "Yogyakarta", D: "Bandung", E: "Surabaya" }, answer: "D", hint: "Konferensi ini menghasilkan Dasasila.", pembahasan: "Konferensi Asia-Afrika (KAA) diselenggarakan di Bandung pada 18-24 April 1955 dan menghasilkan Dasasila Bandung yang menjadi prinsip dasar hubungan antarnegara." },
+            { category: "TWK", question: "Pokok pikiran pertama dalam Pembukaan UUD 1945 adalah...", options: { A: "Negara hendak mewujudkan keadilan sosial bagi seluruh rakyat Indonesia.", B: "Negara yang berkedaulatan rakyat.", C: "Negara berdasarkan atas Ketuhanan Yang Maha Esa.", D: "Negara melindungi segenap bangsa Indonesia dan seluruh tumpah darah Indonesia.", E: "Negara hendak mencapai cita-cita kemerdekaan." }, answer: "D", hint: "Ini adalah pokok pikiran tentang negara persatuan.", pembahasan: "Pokok pikiran pertama adalah 'Negara melindungi segenap bangsa Indonesia dan seluruh tumpah darah Indonesia dengan berdasar atas persatuan', yang merupakan penjabaran dari sila ketiga." },
+            { category: "TWK", question: "Salah satu pilar kebangsaan yang menjadi pemersatu bangsa Indonesia adalah...", options: { A: "Bahasa daerah", B: "Lagu daerah", C: "Bahasa Indonesia", D: "Adat istiadat", E: "Suku bangsa" }, answer: "C", hint: "Pilar ini ditegaskan dalam Sumpah Pemuda.", pembahasan: "Selain Pancasila, UUD 1945, dan Bhinneka Tunggal Ika, NKRI juga disatukan oleh Bahasa Indonesia yang berfungsi sebagai bahasa persatuan." },
+            { category: "TWK", question: "Menurut teori kedaulatan hukum, pemegang kekuasaan tertinggi dalam negara adalah...", options: { A: "Raja", B: "Rakyat", C: "Tuhan", D: "Negara", E: "Hukum" }, answer: "E", hint: "Teori ini menempatkan 'aturan' sebagai yang paling utama.", pembahasan: "Teori kedaulatan hukum menyatakan bahwa hukumlah yang berdaulat. Baik penguasa, rakyat, maupun negara harus tunduk pada hukum." },
+            { category: "TWK", question: "Peristiwa Rengasdengklok memiliki makna penting yaitu...", options: { A: "Menunjukkan kekuatan militer pemuda", B: "Mendesak Soekarno-Hatta agar segera memproklamasikan kemerdekaan", C: "Tempat penyusunan naskah proklamasi", D: "Bentuk perlawanan terhadap Jepang", E: "Awal mula perang kemerdekaan" }, answer: "B", hint: "Peristiwa ini melibatkan 'penculikan' oleh golongan muda.", pembahasan: "Golongan muda membawa Soekarno-Hatta ke Rengasdengklok untuk menjauhkan mereka dari pengaruh Jepang dan mendesak agar proklamasi kemerdekaan segera dilaksanakan tanpa campur tangan Jepang." },
+            { category: "TWK", question: "Yang dimaksud dengan integritas dalam konteks pemberantasan korupsi adalah...", options: { A: "Kecerdasan dalam bekerja", B: "Keahlian dalam bidang tertentu", C: "Kesesuaian antara perkataan dan perbuatan serta menjunjung tinggi prinsip moral", D: "Kemampuan untuk bekerja sama dalam tim", E: "Keberanian untuk mengambil risiko" }, answer: "C", hint: "Integritas adalah tentang kejujuran dan konsistensi.", pembahasan: "Integritas adalah pilar utama anti-korupsi, yang berarti memiliki karakter kuat, jujur, dan konsisten dalam memegang teguh nilai-nilai moral dan etika, meskipun dalam tekanan." },
+            { category: "TWK", question: "Contoh sikap positif terhadap nilai-nilai Pancasila adalah...", options: { A: "Mempelajari Pancasila hanya untuk ujian", B: "Mengutamakan kepentingan golongan di atas kepentingan nasional", C: "Menghafal butir-butir Pancasila tanpa memahaminya", D: "Melakukan musyawarah dalam menyelesaikan masalah bersama", E: "Bersikap tidak peduli terhadap lingkungan sekitar" }, answer: "D", hint: "Cari tindakan nyata yang mencerminkan salah satu sila.", pembahasan: "Melakukan musyawarah adalah pengamalan nyata dari sila keempat, yang merupakan sikap positif terhadap nilai-nilai Pancasila dalam kehidupan sehari-hari." },
+            { category: "TWK", question: "Pahlawan nasional dari Papua yang wajahnya diabadikan dalam mata uang adalah...", options: { A: "Silas Papare", B: "Frans Kaisiepo", C: "Marthen Indey", D: "Johannes Abraham Dimara", E: "Machmud Singgirei Rumagesan" }, answer: "B", hint: "Namanya juga diabadikan sebagai nama bandara di Biak.", pembahasan: "Frans Kaisiepo adalah pahlawan nasional dari Papua yang berperan penting dalam penyatuan Irian Barat ke dalam NKRI. Wajahnya terdapat pada uang kertas pecahan Rp 10.000." },
+            { category: "TWK", question: "Sistem pemerintahan di mana menteri-menteri bertanggung jawab kepada parlemen (DPR) disebut...", options: { A: "Presidensial", B: "Parlementer", C: "Monarki Konstitusional", D: "Republik Absolut", E: "Federal" }, answer: "B", hint: "Dalam sistem ini, parlemen memiliki kekuatan besar.", pembahasan: "Dalam sistem parlementer, kepala pemerintahan (Perdana Menteri) dan kabinetnya bertanggung jawab kepada parlemen. Parlemen dapat menjatuhkan pemerintah melalui mosi tidak percaya." },
+            { category: "TWK", question: "Tiga tuntutan rakyat (Tritura) yang diserukan pada tahun 1966 berisi...", options: { A: "Bubarkan PKI, Turunkan harga, Rombak kabinet", B: "Adili Soeharto, Turunkan harga, Bubarkan Golkar", C: "Nasionalisasi aset asing, Bubarkan PKI, Adili Soekarno", D: "Konfrontasi Malaysia, Turunkan harga, Rombak kabinet", E: "Bubarkan Masyumi, Turunkan harga, Kembali ke UUD 1945" }, answer: "A", hint: "Tuntutan ini muncul setelah peristiwa G30S/PKI.", pembahasan: "Tritura terdiri dari tiga tuntutan utama: (1) Bubarkan PKI beserta ormas-ormasnya, (2) Rombak kabinet Dwikora, dan (3) Turunkan harga/perbaikan ekonomi." },
+            { category: "TWK", question: "Paham yang berfokus pada kebebasan individu dan membatasi kekuasaan pemerintah disebut...", options: { A: "Sosialisme", B: "Komunisme", C: "Fasisme", D: "Liberalisme", E: "Anarkisme" }, answer: "D", hint: "Kata kuncinya adalah 'liberty' atau kebebasan.", pembahasan: "Liberalisme adalah ideologi yang menekankan hak-hak individu, kebebasan sipil, demokrasi, dan pasar bebas, serta memandang perlu adanya pembatasan terhadap kekuasaan pemerintah." },
+            { category: "TWK", question: "Latar belakang utama terjadinya reformasi di Indonesia pada tahun 1998 adalah...", options: { A: "Krisis moneter dan krisis kepercayaan terhadap pemerintah", B: "Keinginan untuk mengubah UUD 1945", C: "Konflik antar etnis di berbagai daerah", D: "Tekanan dari negara-negara asing", E: "Kemenangan partai oposisi dalam pemilu" }, answer: "A", hint: "Gerakan ini dipicu oleh masalah ekonomi yang parah.", pembahasan: "Gerakan Reformasi 1998 dipicu oleh krisis ekonomi (moneter) yang parah, yang kemudian berkembang menjadi krisis kepercayaan terhadap pemerintahan Orde Baru yang dianggap korup, kolutif, dan nepotis (KKN)." },
+            { category: "TWK", question: "Bendera, bahasa, dan lambang negara, serta lagu kebangsaan diatur dalam UUD 1945 pada...", options: { A: "Bab X", B: "Bab XI", C: "Bab XII", D: "Bab XIV", E: "Bab XV" }, answer: "E", hint: "Bab ini secara khusus membahas tentang identitas nasional.", pembahasan: "Bab XV UUD 1945, yang terdiri dari Pasal 35, 36, 36A, 36B, dan 36C, secara spesifik mengatur tentang Bendera, Bahasa, dan Lambang Negara, serta Lagu Kebangsaan." },
+            { category: "TWK", question: "Cinta tanah air dan bangsa dapat dibina salah satunya melalui...", options: { A: "Mempelajari budaya asing", B: "Menggunakan produk luar negeri", C: "Mempelajari sejarah perjuangan bangsa", D: "Mengkritik semua kebijakan pemerintah", E: "Mengutamakan bahasa asing" }, answer: "C", hint: "Bagaimana kita bisa cinta jika tidak kenal sejarahnya?", pembahasan: "Dengan mempelajari sejarah perjuangan bangsa, kita dapat memahami betapa besar pengorbanan para pahlawan dan menumbuhkan rasa cinta serta keinginan untuk menjaga dan mengisi kemerdekaan." },
+            { category: "TWK", question: "Garuda Pancasila sebagai lambang negara ditetapkan melalui...", options: { A: "Peraturan Pemerintah No. 66 Tahun 1951", B: "Undang-Undang No. 24 Tahun 2009", C: "Ketetapan MPR", D: "Keputusan Presiden", E: "Peraturan Daerah" }, answer: "A", hint: "Ini adalah peraturan pemerintah yang spesifik mengatur lambang negara.", pembahasan: "Lambang Negara Garuda Pancasila pertama kali diatur secara resmi dalam Peraturan Pemerintah No. 66 Tahun 1951, yang kemudian disempurnakan oleh UU No. 24 Tahun 2009." },
+            { category: "TWK", question: "Hak DPR untuk meminta keterangan kepada pemerintah mengenai kebijakan tertentu yang penting dan strategis disebut hak...", options: { A: "Inisiatif", B: "Angket", C: "Interpelasi", D: "Budget", E: "Menyatakan Pendapat" }, answer: "C", hint: "Ini adalah hak untuk 'bertanya' atau 'meminta penjelasan'.", pembahasan: "Hak Interpelasi adalah hak DPR untuk meminta keterangan kepada Pemerintah mengenai kebijakan pemerintah yang penting dan strategis serta berdampak luas pada kehidupan bermasyarakat, berbangsa, dan bernegara." },
+
+            // --- TIU (35 Soal) ---
+            { category: "TIU", question: "Semua pekerja mengenakan helm. Sebagian pekerja mengenakan sarung tangan. Kesimpulan yang paling tepat adalah...", options: { A: "Ada pekerja yang tidak mengenakan helm", B: "Semua pekerja mengenakan sarung tangan", C: "Sebagian pekerja mengenakan helm dan sarung tangan", D: "Pekerja yang mengenakan sarung tangan tidak mengenakan helm", E: "Semua pekerja yang tidak mengenakan sarung tangan, mengenakan helm" }, answer: "C", hint: "Gabungkan dua pernyataan tersebut. Ada irisan antara 'pekerja berhelm' dan 'pekerja bersarung tangan'.", pembahasan: "Karena 'sebagian pekerja mengenakan sarung tangan' dan 'semua pekerja mengenakan helm', maka sebagian pekerja tersebut pasti mengenakan keduanya (helm dan sarung tangan)." },
+            { category: "TIU", question: "Deret: 4, 5, 7, 10, 14, 19, ...", options: { A: "24", B: "25", C: "26", D: "27", E: "28" }, answer: "B", hint: "Perhatikan selisih antar angka yang berurutan.", pembahasan: "Pola deret ini adalah penambahan berurut: +1, +2, +3, +4, +5. Maka angka selanjutnya adalah 19 + 6 = 25." },
+            { category: "TIU", question: "Jika x = berat total 5 kotak dengan masing-masing berat 10 kg, dan y = berat total 10 kotak dengan masing-masing berat 5 kg, maka...", options: { A: "x > y", B: "x < y", C: "x = y", D: "2x = y", E: "Hubungan tidak dapat ditentukan" }, answer: "C", hint: "Hitung total berat untuk x dan y.", pembahasan: "x = 5 * 10 = 50 kg. y = 10 * 5 = 50 kg. Jadi, x = y." },
+            { category: "TIU", question: "Gambar yang memiliki pola berbeda dari yang lain adalah...", options: { A: "Segi enam beraturan", B: "Bintang lima sudut", C: "Persegi", D: "Segitiga sama sisi", E: "Lingkaran" }, answer: "E", hint: "Pikirkan tentang sisi lurus.", pembahasan: "Semua pilihan (A, B, C, D) adalah bangun yang terbentuk dari garis lurus, sedangkan lingkaran terbentuk dari garis lengkung." },
+            { category: "TIU", question: "KOLEGA : TEMAN :: ... : ...", options: { A: "Ayah : Ibu", B: "Guru : Murid", C: "Musuh : Lawan", D: "Buku : Pensil", E: "Rumah : Gedung" }, answer: "C", hint: "Cari hubungan sinonim atau kata dengan makna yang sangat mirip.", pembahasan: "Kolega adalah sinonim dari teman (dalam konteks kerja). Musuh adalah sinonim dari lawan." },
+            { category: "TIU", question: "Sebuah proyek dijadwalkan selesai dalam 30 hari oleh 15 pekerja. Setelah 6 hari berjalan, proyek terhenti selama 4 hari. Berapa tambahan pekerja yang dibutuhkan agar proyek selesai tepat waktu?", options: { A: "3", B: "4", C: "5", D: "6", E: "7" }, answer: "A", hint: "Hitung sisa pekerjaan dan sisa waktu yang tersedia.", pembahasan: "Sisa hari normal: 30-6 = 24 hari. Sisa pekerja: 15. Sisa waktu setelah terhenti: 24-4 = 20 hari. Maka, (24 hari * 15 pekerja) / 20 hari = 18 pekerja. Tambahan pekerja = 18 - 15 = 3 orang." },
+            { category: "TIU", question: "Berapakah 62.5% dari 160?", options: { A: "90", B: "95", C: "100", D: "105", E: "110" }, answer: "C", hint: "62.5% sama dengan 5/8.", pembahasan: "62.5% = 5/8. Maka (5/8) * 160 = 5 * 20 = 100." },
+            { category: "TIU", question: "Jika hari ini adalah hari Rabu, maka 100 hari yang akan datang adalah hari...", options: { A: "Kamis", B: "Jumat", C: "Sabtu", D: "Minggu", E: "Senin" }, answer: "B", hint: "Bagi 100 dengan 7 dan perhatikan sisanya.", pembahasan: "100 dibagi 7 adalah 14 dengan sisa 2. Jadi, 100 hari lagi adalah Rabu + 2 hari = Jumat." },
+            { category: "TIU", question: "ABSURD >< ...", options: { A: "Mustahil", B: "Aneh", C: "Masuk Akal", D: "Janggal", E: "Konyol" }, answer: "C", hint: "Cari lawan kata dari 'tidak masuk akal'.", pembahasan: "Absurd berarti tidak masuk akal atau mustahil. Lawan katanya adalah masuk akal (logis)." },
+            { category: "TIU", question: "Jika semua tanaman adalah makhluk hidup dan semua mawar adalah tanaman, maka...", options: { A: "Semua makhluk hidup adalah mawar", B: "Semua mawar adalah makhluk hidup", C: "Sebagian mawar bukan makhluk hidup", D: "Semua tanaman adalah mawar", E: "Tidak ada kesimpulan yang benar" }, answer: "B", hint: "Gunakan logika silogisme (A=B, C=A, maka C=B).", pembahasan: "Ini adalah silogisme. Jika semua mawar adalah tanaman (A), dan semua tanaman adalah makhluk hidup (B), maka kesimpulannya adalah semua mawar adalah makhluk hidup." },
+            { category: "TIU", question: "Deret: Z, W, T, Q, N, ...", options: { A: "K", B: "J", C: "I", D: "H", E: "L" }, answer: "A", hint: "Ini adalah deret mundur dengan pola tertentu.", pembahasan: "Polanya adalah mundur 3 langkah dalam alfabet. Z -> W (-3), W -> T (-3), T -> Q (-3), Q -> N (-3). Maka selanjutnya adalah N - 3 = K." },
+            { category: "TIU", question: "Sebuah kubus memiliki volume 729 cm³. Berapa luas salah satu sisinya?", options: { A: "9 cm²", B: "27 cm²", C: "54 cm²", D: "81 cm²", E: "108 cm²" }, answer: "D", hint: "Cari dulu panjang rusuknya dengan akar pangkat tiga dari volume.", pembahasan: "Panjang rusuk (s) = ³√729 = 9 cm. Luas salah satu sisi = s * s = 9 * 9 = 81 cm²." },
+            { category: "TIU", question: "Harga 3 buku dan 2 pensil adalah Rp 11.500. Harga 2 buku dan 1 pensil adalah Rp 7.250. Berapa harga 5 buku dan 3 pensil?", options: { A: "Rp 18.750", B: "Rp 19.250", C: "Rp 20.000", D: "Rp 21.500", E: "Rp 22.750" }, answer: "A", hint: "Gunakan metode eliminasi atau substitusi untuk menemukan harga satuan.", pembahasan: "Eliminasi: 2(2B+P) = 4B+2P = 14500. (4B+2P)-(3B+2P)=B=3000. Substitusi: 2(3000)+P=7250 -> P=1250. Maka 5B+3P = 5(3000)+3(1250) = 15000+3750 = 18750." },
+            { category: "TIU", question: "TANDON : AIR :: ... : ...", options: { A: "Bank : Uang", B: "Rumah : Keluarga", C: "Sekolah : Siswa", D: "Lampu : Terang", E: "Buku : Ilmu" }, answer: "A", hint: "Hubungannya adalah 'wadah tempat menyimpan'.", pembahasan: "Tandon adalah wadah untuk menyimpan air. Bank adalah lembaga untuk menyimpan uang." },
+            { category: "TIU", question: "Jika x = (1/4) / (1/8) dan y = 0.25 * 4, maka...", options: { A: "x > y", B: "x < y", C: "x = y", D: "x = 2y", E: "Hubungan tidak dapat ditentukan" }, answer: "D", hint: "Selesaikan operasi untuk x dan y secara terpisah.", pembahasan: "x = (1/4) * 8 = 2. y = 0.25 * 4 = 1. Jadi, x > y dan lebih spesifik x = 2y." },
+            { category: "TIU", question: "Jika beberapa A adalah B, dan semua B adalah C, maka...", options: { A: "Semua A adalah C", B: "Beberapa A adalah C", C: "Tidak ada A yang C", D: "Semua C adalah A", E: "Tidak dapat ditarik kesimpulan" }, answer: "B", hint: "Hanya 'beberapa' A yang masuk ke dalam himpunan B, yang semuanya adalah C.", pembahasan: "Karena hanya beberapa A yang merupakan B, dan semua B adalah C, maka dapat dipastikan bahwa setidaknya beberapa A tersebut juga merupakan C." },
+            { category: "TIU", question: "Deret: 1, 3, 4, 7, 11, 18, ...", options: { A: "25", B: "27", C: "29", D: "31", E: "33" }, answer: "C", hint: "Ini adalah deret Fibonacci, di mana angka berikutnya adalah jumlah dari dua angka sebelumnya.", pembahasan: "Setiap angka adalah hasil penjumlahan dua angka sebelumnya (1+3=4, 3+4=7, 4+7=11, 7+11=18). Maka angka selanjutnya adalah 11 + 18 = 29." },
+            { category: "TIU", question: "Seorang pedagang membeli barang dengan harga Rp 80.000 dan menjualnya dengan keuntungan 15%. Berapa harga jual barang tersebut?", options: { A: "Rp 88.000", B: "Rp 90.000", C: "Rp 92.000", D: "Rp 95.000", E: "Rp 102.000" }, answer: "C", hint: "Hitung 15% dari 80.000 lalu tambahkan ke harga beli.", pembahasan: "Keuntungan = 15% * 80.000 = 12.000. Harga jual = Harga beli + Keuntungan = 80.000 + 12.000 = Rp 92.000." },
+            { category: "TIU", question: "EVOKASI = ...", options: { A: "Menggugah rasa", B: "Menilai", C: "Mengubah", D: "Menyatukan", E: "Mengungsikan" }, answer: "A", hint: "Kata ini berhubungan dengan membangkitkan kenangan atau perasaan.", pembahasan: "Evokasi adalah tindakan membangkitkan atau menggugah perasaan, kenangan, atau emosi." },
+            { category: "TIU", question: "Jika ada angsa, ia berwarna putih. Di halaman ada binatang berwarna putih. Kesimpulannya...", options: { A: "Binatang itu pasti angsa", B: "Binatang itu bukan angsa", C: "Mungkin binatang itu angsa", D: "Semua binatang di halaman adalah angsa", E: "Tidak dapat ditarik kesimpulan" }, answer: "E", hint: "Pernyataan 'Jika A maka B' tidak berarti 'Jika B maka A'.", pembahasan: "Kesalahan logika (fallacy). Meskipun semua angsa berwarna putih, tidak berarti semua yang berwarna putih adalah angsa. Bisa saja itu kucing putih atau kelinci putih. Jadi, tidak ada kesimpulan pasti yang bisa ditarik." },
+            { category: "TIU", question: "Sebuah mobil berjalan dengan kecepatan rata-rata 60 km/jam. Berapa jarak yang ditempuh dalam 2 jam 30 menit?", options: { A: "120 km", B: "135 km", C: "150 km", D: "160 km", E: "180 km" }, answer: "C", hint: "Ubah 2 jam 30 menit menjadi jam (2.5 jam).", pembahasan: "Jarak = Kecepatan * Waktu = 60 km/jam * 2.5 jam = 150 km." },
+            { category: "TIU", question: "Deret: 1, 5, 4, 8, 7, 11, 10, ...", options: { A: "13", B: "14", C: "15", D: "16", E: "9" }, answer: "B", hint: "Ada dua pola yang berjalan berselang-seling.", pembahasan: "Ini adalah deret larik 2. Pola pertama: 1, 4, 7, 10 (+3). Pola kedua: 5, 8, 11, ... (+3). Maka angka selanjutnya adalah 11 + 3 = 14." },
+            { category: "TIU", question: "Ayah : Anak = Pohon : ...", options: { A: "Akar", B: "Daun", C: "Ranting", D: "Tunas", E: "Buah" }, answer: "D", hint: "Hubungannya adalah 'induk' dan 'keturunannya' atau 'generasi barunya'.", pembahasan: "Ayah menghasilkan anak (generasi baru). Pohon menghasilkan tunas (generasi baru)." },
+            { category: "TIU", question: "Jika x adalah 32, dan y = 17 * 2, maka...", options: { A: "x > y", B: "x < y", C: "x = y", D: "x = 2y", E: "Hubungan tidak dapat ditentukan" }, answer: "B", hint: "Tentukan nilai x dan y terlebih dahulu.", pembahasan: "x = 32. y = 17 * 2 = 34. Maka, x < y." },
+            { category: "TIU", question: "Semua bunga harum. Sebagian yang harum tidak disukai lebah. Kesimpulannya...", options: { A: "Semua bunga tidak disukai lebah", B: "Sebagian bunga tidak disukai lebah", C: "Semua yang tidak disukai lebah adalah bunga", D: "Lebah tidak suka bunga", E: "Tidak ada kesimpulan yang benar" }, answer: "B", hint: "Gabungkan premisnya. Ada 'sebagian' dari kelompok 'harum' yang tidak disukai lebah, dan semua 'bunga' termasuk dalam kelompok 'harum'.", pembahasan: "Karena semua bunga termasuk dalam kategori 'harum', dan sebagian dari kategori 'harum' itu tidak disukai lebah, maka dapat disimpulkan bahwa setidaknya sebagian dari bunga tersebut tidak disukai lebah." },
+            { category: "TIU", question: "Luas sebuah persegi panjang adalah 192 cm². Jika perbandingan panjang dan lebarnya adalah 4:3, berapa kelilingnya?", options: { A: "56 cm", B: "60 cm", C: "64 cm", D: "72 cm", E: "80 cm" }, answer: "A", hint: "Gunakan variabel perbandingan (4x dan 3x) untuk mencari nilai x dari luas.", pembahasan: "Luas = p * l -> 192 = (4x)(3x) -> 192 = 12x² -> x² = 16 -> x = 4. Maka panjang = 4*4 = 16 cm, lebar = 3*4 = 12 cm. Keliling = 2(p+l) = 2(16+12) = 2(28) = 56 cm." },
+            { category: "TIU", question: "INSINUASI >< ...", options: { A: "Sindiran", B: "Tuduhan", C: "Langsung", D: "Kiasan", E: "Pujian" }, answer: "C", hint: "Insinuasi adalah tuduhan yang tidak langsung. Cari lawan katanya.", pembahasan: "Insinuasi berarti tuduhan tersembunyi, tidak langsung, atau sindiran. Lawan katanya yang paling tepat adalah 'langsung' atau 'terang-terangan'." },
+            { category: "TIU", question: "Jika 6 orang dapat menyelesaikan 6 artikel dalam 6 jam, berapa waktu yang dibutuhkan 12 orang untuk menyelesaikan 12 artikel?", options: { A: "3 jam", B: "6 jam", C: "9 jam", D: "12 jam", E: "18 jam" }, answer: "B", hint: "Perhatikan rasio orang, artikel, dan waktu.", pembahasan: "Jika 6 orang menyelesaikan 6 artikel dalam 6 jam, artinya 1 orang menyelesaikan 1 artikel dalam 6 jam. Jadi, 12 orang juga akan menyelesaikan 12 artikel dalam 6 jam, karena setiap orang mengerjakan artikelnya masing-masing secara paralel." },
+            { category: "TIU", question: "Deret: A, C, B, D, C, E, D, ...", options: { A: "E", B: "F", C: "G", D: "H", E: "C" }, answer: "B", hint: "Ada dua deret huruf yang berjalan berselang-seling.", pembahasan: "Ini adalah deret larik 2. Pola pertama: A, B, C, D,... (maju 1). Pola kedua: C, D, E, ... (maju 1). Maka angka selanjutnya adalah dari pola kedua, yaitu F." },
+            { category: "TIU", question: "Semua dokter adalah orang pintar. Beberapa sarjana adalah dokter. Kesimpulannya...", options: { A: "Beberapa sarjana adalah orang pintar", B: "Semua sarjana adalah orang pintar", C: "Beberapa orang pintar bukan dokter", D: "Semua dokter adalah sarjana", E: "Tidak ada sarjana yang pintar" }, answer: "A", hint: "Gunakan logika silogisme dengan kata 'beberapa'.", pembahasan: "Karena beberapa sarjana adalah dokter, dan semua dokter adalah orang pintar, maka dapat disimpulkan bahwa beberapa sarjana tersebut adalah orang pintar." },
+            { category: "TIU", question: "Berapa nilai dari 12,5% dari 512?", options: { A: "32", B: "48", C: "64", D: "72", E: "128" }, answer: "C", hint: "12,5% sama dengan 1/8.", pembahasan: "12,5% adalah 1/8. Maka (1/8) * 512 = 64." },
+            { category: "TIU", question: "GENTAR : BERANI :: ... : ...", options: { A: "Takut : Pengecut", B: "Sabar : Marah", C: "Ragu : Yakin", D: "Cinta : Benci", E: "Suka : Duka" }, answer: "C", hint: "Hubungannya adalah antonim atau lawan kata.", pembahasan: "Gentar adalah lawan kata dari berani. Ragu adalah lawan kata dari yakin." },
+            { category: "TIU", question: "Sebuah tabung memiliki jari-jari 7 cm dan tinggi 10 cm. Berapa volumenya? (π=22/7)", options: { A: "770 cm³", B: "1540 cm³", C: "2310 cm³", D: "3080 cm³", E: "4620 cm³" }, answer: "B", hint: "Rumus volume tabung adalah π * r² * t.", pembahasan: "Volume = (22/7) * 7 * 7 * 10 = 22 * 7 * 10 = 1540 cm³." },
+            { category: "TIU", question: "Jika tidak lulus ujian, maka sedih. Budi tidak sedih. Kesimpulannya...", options: { A: "Budi lulus ujian", B: "Budi tidak ikut ujian", C: "Budi sedih karena hal lain", D: "Budi belum melihat hasil ujian", E: "Tidak dapat ditarik kesimpulan" }, answer: "A", hint: "Ini adalah modus Tollens (Jika P maka Q. Bukan Q, maka Bukan P).", pembahasan: "Berdasarkan modus Tollens, jika premis 'tidak lulus -> sedih' benar, maka kebalikannya 'tidak sedih -> lulus' juga pasti benar." },
+            { category: "TIU", question: "GARAM : ASIN :: GULA : ...", options: { A: "Pahit", B: "Tawar", C: "Manis", D: "Pedas", E: "Asam" }, answer: "C", hint: "Hubungannya adalah benda dan rasa yang dihasilkannya.", pembahasan: "Garam menghasilkan rasa asin. Gula menghasilkan rasa manis." },
+
+            // --- TKP (45 Soal) ---
+            { category: "TKP", question: "Anda diminta atasan untuk mengerjakan tugas yang sangat mendesak di luar jam kerja, namun Anda sudah memiliki rencana keluarga yang tidak bisa ditunda. Sikap Anda...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menjelaskan situasi saya kepada atasan dengan jujur, dan mengusulkan solusi alternatif seperti mengerjakan sebagian tugas dari rumah atau mendelegasikannya.", B: "Membatalkan rencana keluarga karena pekerjaan adalah prioritas utama.", C: "Menolak dengan tegas karena sudah di luar jam kerja.", D: "Mengerjakan tugas tersebut dengan terpaksa sambil menunjukkan kekecewaan.", E: "Mengabaikan permintaan atasan." } },
+            { category: "TKP", question: "Seorang rekan kerja menyebarkan informasi yang belum terverifikasi kebenarannya di grup chat kantor, yang berpotensi menimbulkan kepanikan. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menghubungi rekan tersebut secara pribadi untuk mengingatkan agar tidak menyebar informasi sebelum valid dan menyarankan untuk menghapus pesannya.", B: "Langsung membantah di grup dan meminta semua orang untuk tenang.", C: "Melaporkan pesan tersebut kepada atasan atau HRD.", D: "Mendiamkannya karena tidak ingin terlibat konflik.", E: "Ikut panik dan meneruskan informasi tersebut." } },
+            { category: "TKP", question: "Anda melihat ada ketidaksesuaian antara data pengeluaran riil dengan laporan yang dibuat oleh rekan Anda. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Mengajak rekan tersebut berdiskusi secara pribadi, menunjukkan data yang Anda miliki, dan bersama-sama melakukan kroscek untuk menemukan letak perbedaannya.", B: "Langsung memperbaiki laporan tersebut agar cepat selesai.", C: "Melaporkan temuan Anda langsung kepada atasan.", D: "Menyimpan temuan tersebut untuk diri sendiri.", E: "Menegur rekan tersebut di depan umum agar lebih teliti." } },
+            { category: "TKP", question: "Tim Anda diberikan target yang menurut Anda sangat tidak realistis untuk dicapai dalam waktu singkat. Sebagai anggota tim, Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Mengajak tim untuk menganalisis target tersebut, membuat strategi kerja yang paling efisien, dan menyampaikannya kepada atasan jika ada potensi kendala secara objektif.", B: "Bekerja semaksimal mungkin meskipun pesimis target akan tercapai.", C: "Mengeluh kepada rekan-rekan lain bahwa targetnya tidak masuk akal.", D: "Bekerja dengan santai karena sudah tahu tidak akan tercapai.", E: "Meminta atasan untuk merevisi target." } },
+            { category: "TKP", question: "Anda diminta untuk mempelajari sistem IT baru yang cukup rumit. Sikap Anda...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Mengalokasikan waktu khusus untuk belajar secara mandiri, mengikuti tutorial, dan tidak ragu bertanya kepada tim IT jika menemukan kesulitan.", B: "Menunggu adanya pelatihan resmi dari kantor.", C: "Meminta rekan yang sudah bisa untuk mengerjakan bagian tugas saya yang berhubungan dengan sistem baru.", D: "Merasa terbebani dan menunda-nunda untuk mempelajarinya.", E: "Berharap sistem lama tidak akan diganti." } },
+            { category: "TKP", question: "Seorang pelanggan marah karena produk yang diterimanya cacat. Padahal, itu adalah kesalahan dari pihak kurir pengiriman. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Meminta maaf atas ketidaknyamanannya, menerima keluhannya, dan menawarkan bantuan untuk proses klaim ke pihak kurir sambil memberikan solusi alternatif dari perusahaan.", B: "Menjelaskan bahwa itu murni kesalahan kurir dan bukan tanggung jawab perusahaan.", C: "Meminta pelanggan untuk langsung komplain ke pihak kurir.", D: "Mengganti produk tersebut dengan yang baru meskipun itu bukan kesalahan perusahaan.", E: "Mengabaikan keluhan pelanggan." } },
+            { category: "TKP", question: "Dalam sebuah rapat, ide Anda yang cemerlang diklaim dan dipresentasikan oleh rekan kerja Anda seolah-olah itu idenya. Reaksi Anda...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Tetap tenang selama rapat, dan setelah selesai, saya akan berbicara empat mata dengan rekan tersebut untuk mengklarifikasi dan menegaskan kepemilikan ide saya secara profesional.", B: "Langsung menyela saat presentasi dan mengatakan bahwa itu adalah ide saya.", C: "Merasa sangat marah dan menceritakannya kepada semua rekan kerja lain.", D: "Membiarkannya dan merelakan ide tersebut demi keharmonisan tim.", E: "Melaporkannya langsung kepada atasan saat itu juga." } },
+            { category: "TKP", question: "Anda adalah pemimpin proyek. Salah satu anggota tim Anda secara konsisten tidak memberikan kinerja yang baik dan menghambat kemajuan. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Mengadakan sesi coaching pribadi, mencari tahu penyebab masalahnya, dan memberikan feedback serta dukungan untuk membantunya memperbaiki kinerja.", B: "Memberikan teguran keras agar ia lebih termotivasi.", C: "Mengeluarkan anggota tersebut dari tim.", D: "Melaporkan kinerjanya kepada atasan dan meminta pengganti.", E: "Memberikan porsi pekerjaannya kepada anggota tim lain yang lebih kompeten." } },
+            { category: "TKP", question: "Anda melihat atasan Anda melanggar prosedur perusahaan demi mempercepat sebuah proyek. Sikap Anda...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Mencari waktu yang tepat untuk mengingatkan atasan secara sopan tentang potensi risiko dari pelanggaran prosedur tersebut.", B: "Mengikutinya karena ia adalah atasan dan lebih tahu apa yang terbaik.", C: "Melaporkannya secara anonim melalui jalur yang tersedia (whistleblowing system).", D: "Pura-pura tidak tahu karena takut kena masalah.", E: "Mendokumentasikannya sebagai bukti jika terjadi masalah di kemudian hari." } },
+            { category: "TKP", question: "Anda diminta untuk memberikan presentasi penting mewakili tim Anda secara mendadak karena rekan yang seharusnya presentasi sakit. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menerima tantangan tersebut, segera mempelajari materi secepat mungkin, dan berusaha memberikan yang terbaik demi nama baik tim.", B: "Menerimanya dengan syarat diberikan waktu ekstra untuk persiapan.", C: "Menolaknya karena merasa tidak siap dan takut mempermalukan tim.", D: "Menyarankan orang lain yang lebih siap.", E: "Mencari alasan lain agar tidak perlu presentasi." } },
+            { category: "TKP", question: "Anda bekerja di bagian pelayanan publik. Saat jam istirahat, datang seorang ibu tua yang terlihat sangat kebingungan dan butuh bantuan segera. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menunda istirahat sejenak untuk membantunya terlebih dahulu karena melayani masyarakat adalah prioritas.", B: "Memintanya untuk menunggu sampai jam istirahat selesai.", C: "Mengarahkan ibu tersebut ke rekan lain yang tidak sedang istirahat.", D: "Memberitahu satpam untuk menanganinya.", E: "Berpura-pura tidak melihat dan melanjutkan istirahat." } },
+            { category: "TKP", question: "Tim Anda berhasil mencapai target yang luar biasa. Sebagai pemimpin, Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Memberikan apresiasi kepada seluruh anggota tim secara terbuka, menonjolkan kontribusi setiap individu, dan merayakannya bersama.", B: "Melaporkan keberhasilan tersebut kepada atasan dan menyebutkan bahwa ini adalah hasil kerja keras tim.", C: "Menerima pujian dari atasan untuk diri sendiri sebagai pemimpin.", D: "Menganggapnya sebagai hal yang wajar dan langsung memberikan target baru.", E: "Memberikan bonus dari kantong pribadi." } },
+            { category: "TKP", question: "Anda merasa jenuh dengan rutinitas pekerjaan Anda. Untuk menjaga semangat kerja, Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Proaktif mengusulkan ide-ide perbaikan atau proyek baru yang relevan dengan pekerjaan saya kepada atasan.", B: "Mengikuti kursus atau pelatihan online untuk meningkatkan skill baru.", C: "Mencoba menata ulang ruang kerja dan alur kerja saya agar lebih segar.", D: "Bekerja seperti biasa sambil berharap ada perubahan.", E: "Sering mengambil cuti untuk liburan." } },
+            { category: "TKP", question: "Anda tidak setuju dengan kebijakan baru yang diterapkan di kantor. Cara terbaik Anda menyalurkan aspirasi adalah...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menyampaikannya melalui forum resmi atau kepada atasan langsung dengan argumen yang logis dan data pendukung.", B: "Menggalang dukungan dari rekan-rekan kerja yang juga tidak setuju.", C: "Menulis kritik di media sosial.", D: "Menggerutu dan mengeluh di belakang.", E: "Melanggar kebijakan tersebut sebagai bentuk protes." } },
+            { category: "TKP", question: "Seorang rekan meminta Anda untuk berbohong mengenai kehadirannya kepada atasan. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menolak dengan tegas namun sopan, dan menjelaskan bahwa Anda tidak bisa berkompromi dengan ketidakjujuran.", B: "Menasihatinya untuk jujur kepada atasan.", C: "Menolak dan mengancam akan melaporkannya.", D: "Membantunya karena merasa tidak enak dan kasihan.", E: "Menyarankan cara berbohong yang lebih baik." } },
+            { category: "TKP", question: "Anda harus bekerja sama dalam tim dengan orang yang sangat berbeda pandangan politik dengan Anda. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Tetap profesional, fokus pada tujuan dan tugas bersama, serta tidak membawa perbedaan pandangan pribadi ke dalam pekerjaan.", B: "Menghindari pembicaraan tentang politik dengannya.", C: "Mencoba meyakinkannya bahwa pandangan Anda yang benar.", D: "Menjaga jarak dan hanya berbicara seperlunya terkait pekerjaan.", E: "Meminta untuk tidak satu tim dengannya." } },
+            { category: "TKP", question: "Anda diberikan kepercayaan untuk mengelola anggaran sebuah kegiatan. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menggunakannya secara transparan, efisien, dan membuat laporan pertanggungjawaban yang detail dan akurat.", B: "Mencari cara untuk menghemat anggaran agar ada sisa yang bisa dikembalikan.", C: "Menggunakan semua anggaran yang diberikan agar tidak dikurangi di kegiatan selanjutnya.", D: "Mengalokasikan sebagian kecil untuk 'dana tak terduga' pribadi.", E: "Meminta vendor untuk menaikkan harga di kuitansi." } },
+            { category: "TKP", question: "Pekerjaan Anda menuntut untuk selalu update dengan peraturan terbaru. Cara Anda menyikapinya...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Secara rutin dan mandiri mencari informasi tentang peraturan baru dari sumber-sumber yang kredibel.", B: "Bergabung dengan komunitas atau milis yang relevan dengan profesi saya.", C: "Menunggu informasi atau sosialisasi dari kantor.", D: "Bertanya kepada rekan jika ada peraturan baru.", E: "Merasa terbebani dengan banyaknya peraturan yang harus diingat." } },
+            { category: "TKP", question: "Anda melihat rekan kerja mengalami kesulitan menggunakan aplikasi komputer dasar yang penting untuk pekerjaan. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menawarkan untuk mengajarinya secara perlahan di waktu senggang agar ia bisa mandiri.", B: "Membantunya setiap kali ia mengalami kesulitan.", C: "Menyarankannya untuk mengikuti kursus komputer.", D: "Menganggapnya sebagai kelemahannya.", E: "Melaporkan kepada atasan bahwa ia tidak kompeten." } },
+            { category: "TKP", question: "Anda menerima kritik yang pedas dari atasan di depan umum. Reaksi pertama Anda adalah...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Mendengarkan dengan baik, mengucapkan terima kasih atas masukannya, dan akan menjadikannya bahan introspeksi diri.", B: "Meminta maaf jika memang melakukan kesalahan.", C: "Mencoba membela diri dengan argumen saat itu juga.", D: "Merasa malu dan sakit hati.", E: "Menangis di depan umum." } },
+            { category: "TKP", question: "Anda ditugaskan di daerah yang memiliki adat istiadat sangat berbeda dengan Anda. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Mempelajari adat istiadat setempat dan berusaha beradaptasi dengan tetap menjunjung tinggi nilai-nilai luhur yang saya anut.", B: "Bergaul hanya dengan orang-orang yang memiliki latar belakang sama.", C: "Menjaga jarak dan bersikap formal untuk menghindari kesalahpahaman.", D: "Menganggap adat istiadat saya yang paling benar.", E: "Meminta untuk dipindahkan ke daerah lain." } },
+            { category: "TKP", question: "Anda memerlukan data dari divisi lain yang terkenal sulit untuk diajak bekerja sama. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menghubungi perwakilan divisi tersebut secara sopan, menjelaskan tujuan dan urgensi data, serta menawarkan bantuan jika diperlukan.", B: "Meminta atasan saya untuk membuat surat resmi permintaan data.", C: "Mencari data dari sumber lain meskipun kurang akurat.", D: "Menunggu mereka memberikan data dengan sendirinya.", E: "Mengeluh tentang sulitnya bekerja sama dengan divisi tersebut." } },
+            { category: "TKP", question: "Sistem online kantor sedang down, dan antrian pelayanan menjadi sangat panjang dan warga mulai mengeluh. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Secara proaktif memberikan penjelasan kepada warga yang mengantri, memohon maaf, dan menawarkan untuk mencatat data mereka secara manual agar bisa diproses nanti.", B: "Tetap bekerja semaksimal mungkin dengan sistem yang ada.", C: "Meminta warga untuk datang kembali di lain waktu.", D: "Menyalahkan tim IT di depan warga.", E: "Merasa stres dan ikut mengeluh." } },
+            { category: "TKP", question: "Anda melakukan kesalahan kecil dalam pekerjaan yang tidak diketahui oleh siapa pun. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Segera memperbaikinya dan melaporkan kepada atasan sebagai bentuk tanggung jawab dan pembelajaran.", B: "Memperbaikinya secara diam-diam dan berharap tidak ada dampak buruk.", C: "Membiarkannya karena tidak ada yang tahu.", D: "Berdoa agar tidak ada yang menyadari kesalahan tersebut.", E: "Mencari cara agar kesalahan tersebut terlihat seperti kesalahan orang lain." } },
+            { category: "TKP", question: "Rekan kerja Anda membagikan konten berbau radikal dan intoleran di media sosial pribadinya. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menjaga jarak dan melaporkan aktivitasnya kepada HRD atau atasan jika konten tersebut berpotensi merusak nama baik institusi.", B: "Menasihatinya secara pribadi untuk lebih bijak dalam bermedia sosial.", C: "Tidak mempedulikannya karena itu adalah akun media sosial pribadinya.", D: "Mendebatnya di kolom komentar.", E: "Memblokir akun media sosialnya." } },
+            { category: "TKP", question: "Kantor Anda akan pindah ke lokasi yang lebih jauh dari rumah Anda, menambah waktu dan biaya transportasi. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menerimanya sebagai bagian dari dinamika pekerjaan dan mulai merencanakan rute serta transportasi yang paling efisien.", B: "Mengajukan permohonan keringanan seperti fleksibilitas jam kerja kepada atasan.", C: "Merasa berat hati dan mulai mempertimbangkan untuk mencari pekerjaan lain.", D: "Mengeluh tentang kebijakan tersebut kepada rekan-rekan.", E: "Sering datang terlambat dengan alasan lokasi baru yang jauh." } },
+            { category: "TKP", question: "Proyek yang Anda kerjakan hasilnya kurang memuaskan menurut atasan, meskipun Anda sudah bekerja keras. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Meminta feedback spesifik dari atasan, melakukan evaluasi diri, dan berkomitmen untuk memperbaikinya di kesempatan berikutnya.", B: "Merasa kecewa namun menerima penilaian tersebut.", C: "Mencoba berargumen dan mempertahankan hasil kerja saya.", D: "Menyalahkan faktor eksternal yang berada di luar kendali saya.", E: "Kehilangan motivasi untuk proyek selanjutnya." } },
+            { category: "TKP", question: "Anda harus menjelaskan isu teknis yang rumit kepada audiens non-teknis. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menggunakan analogi, perumpamaan, dan bahasa yang sederhana serta visualisasi data agar mudah dipahami oleh semua orang.", B: "Menjelaskannya sesuai dengan istilah teknis yang ada.", C: "Meminta audiens untuk fokus dan berusaha memahami.", D: "Menjelaskan secara singkat karena menganggap mereka tidak akan paham.", E: "Menyerahkan tugas tersebut kepada orang lain." } },
+            { category: "TKP", question: "Atasan meminta Anda memanipulasi data laporan agar terlihat lebih baik di mata manajemen. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menolak dengan tegas namun sopan, serta menjelaskan risiko dan dampak negatif dari tindakan tersebut bagi perusahaan.", B: "Melakukannya dengan ragu-ragu karena takut pada atasan.", C: "Meminta perintah tersebut secara tertulis sebagai bukti.", D: "Melaporkan permintaan atasan kepada pihak yang lebih tinggi.", E: "Melakukannya karena itu adalah perintah." } },
+            { category: "TKP", question: "Anda menerima feedback negatif yang konstruktif dari rekan kerja. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Mengucapkan terima kasih, mendengarkannya dengan pikiran terbuka, dan menjadikannya bahan untuk perbaikan diri.", B: "Mendengarkannya namun merasa sedikit tersinggung.", C: "Mencoba membela diri dan menjelaskan alasan di balik tindakan saya.", D: "Menganggap rekan tersebut hanya mencari-cari kesalahan.", E: "Menjauhi rekan tersebut." } },
+            { category: "TKP", question: "Anda menemukan dompet berisi uang dan kartu identitas di toilet kantor. Tindakan yang Anda lakukan adalah...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Segera mencari informasi kontak pemiliknya dan menghubungi langsung, atau menyerahkannya ke bagian keamanan/resepsionis untuk diumumkan.", B: "Menyerahkannya kepada atasan saya.", C: "Mengumumkannya di grup chat kantor untuk mencari pemiliknya.", D: "Menyimpannya dan menunggu jika ada yang mencari.", E: "Mengambil uangnya dan membuang dompetnya." } },
+            { category: "TKP", question: "Seorang warga penyandang disabilitas datang untuk mengurus perizinan dan terlihat kesulitan dengan alur yang ada. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Mendampinginya secara pribadi, membantu menjelaskan alur, dan memastikan ia mendapatkan pelayanan prioritas sesuai haknya.", B: "Meminta rekan lain untuk membantunya karena saya sedang sibuk.", C: "Menjelaskan alur pelayanan dengan suara yang lebih keras.", D: "Mengarahkan ke petugas keamanan untuk dibantu.", E: "Menganggap semua warga harus mengikuti prosedur yang sama." } },
+            { category: "TKP", question: "Salah satu anggota tim Anda terus menerus membuat kesalahan yang sama meskipun sudah diingatkan berkali-kali. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Mengajaknya berbicara secara pribadi untuk mencari akar masalahnya, mungkin ia butuh metode penjelasan yang berbeda atau ada masalah pribadi.", B: "Melaporkannya kepada ketua tim atau atasan agar dicarikan solusi.", C: "Memintanya untuk lebih fokus dan teliti dalam bekerja.", D: "Mengerjakan ulang bagiannya yang salah agar pekerjaan cepat selesai.", E: "Menjauhinya agar tidak ikut terkena imbas kesalahannya." } },
+            { category: "TKP", question: "Atasan lama Anda yang sangat baik dan suportif digantikan oleh atasan baru yang terkenal sangat kaku dan disiplin. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Berusaha memahami dan beradaptasi dengan gaya kepemimpinan atasan baru, serta menunjukkan kinerja terbaik secara profesional.", B: "Bekerja seperti biasa dan menjaga jarak aman dengan atasan baru.", C: "Membanding-bandingkan atasan baru dengan atasan lama.", D: "Merasa tidak nyaman dan mulai mencari peluang pindah divisi.", E: "Mengajak rekan lain untuk menentang gaya kepemimpinan atasan baru." } },
+            { category: "TKP", question: "Perusahaan menawarkan kursus online gratis untuk meningkatkan keahlian, namun kursus tersebut diadakan di luar jam kerja. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Mengikutinya dengan antusias karena ini adalah kesempatan berharga untuk pengembangan diri yang akan menunjang karir saya.", B: "Mengikutinya jika materi kursusnya saya sukai.", C: "Mempertimbangkannya jika ada kompensasi lembur.", D: "Tidak mengikutinya karena waktu di luar jam kerja adalah untuk pribadi.", E: "Ragu-ragu karena takut mengganggu waktu istirahat." } },
+            { category: "TKP", question: "Saat perjalanan dinas, rekan Anda mengajak untuk 'membulatkan' biaya pengeluaran di laporan pertanggungjawaban. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menolak dengan tegas dan menjelaskan bahwa hal tersebut tidak sesuai dengan prinsip integritas dan berisiko.", B: "Menolak namun tidak enak hati.", C: "Ikut saja karena semua orang juga melakukannya.", D: "Memintanya untuk tidak melibatkan saya dalam rencananya.", E: "Setuju dengan syarat pembagian yang adil." } },
+            { category: "TKP", question: "Seorang warga yang telah Anda bantu dengan baik datang kembali dan memberikan sebuah bingkisan sebagai ucapan terima kasih. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menolak dengan sopan dan halus, sambil menjelaskan bahwa melayani dengan baik sudah menjadi kewajiban saya sebagai ASN.", B: "Menerimanya agar tidak menyinggung perasaan warga tersebut.", C: "Menerimanya dan melaporkannya kepada atasan.", D: "Menerimanya dan membaginya dengan rekan-rekan kantor.", E: "Menyarankan untuk memberikan bingkisan tersebut ke panti asuhan." } },
+            { category: "TKP", question: "Anda merasa hasil kerja keras Anda tidak pernah mendapatkan apresiasi yang layak dari atasan, sementara rekan lain yang dekat dengan atasan selalu dipuji. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Tetap fokus untuk memberikan kinerja terbaik secara konsisten dan mencari cara untuk mengkomunikasikan hasil kerja saya secara lebih efektif.", B: "Membicarakan perasaan saya dengan atasan secara profesional.", C: "Menurunkan semangat kerja karena merasa tidak adil.", D: "Mencoba mendekati atasan seperti yang dilakukan rekan saya.", E: "Mengeluh kepada rekan-rekan lain." } },
+            { category: "TKP", question: "Anda diundang ke sebuah acara networking profesi yang menurut Anda membosankan dan tidak banyak memberikan manfaat langsung. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Tetap menghadirinya dan berusaha proaktif mencari setidaknya satu atau dua kontak baru atau wawasan yang bisa diambil.", B: "Datang sebentar hanya untuk formalitas lalu pulang.", C: "Tidak datang dengan memberikan alasan sakit.", D: "Datang namun hanya sibuk dengan ponsel saya.", E: "Mengabaikan undangan tersebut." } },
+            { category: "TKP", question: "Prosedur kerja di kantor diubah menjadi lebih rumit dan panjang demi meningkatkan keamanan data. Sikap Anda...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Memahami pentingnya keamanan data dan berusaha mematuhi serta beradaptasi dengan prosedur baru tersebut.", B: "Mematuhi prosedur baru sambil sesekali mengeluh tentang kerumitannya.", C: "Mencari cara untuk mengakali prosedur agar pekerjaan saya lebih cepat.", D: "Memprotes kebijakan tersebut karena menghambat produktivitas.", E: "Meminta tim IT untuk mengembalikan prosedur lama." } },
+            { category: "TKP", question: "Tim Anda mendapat pujian atas sebuah proyek. Anda merasa kontribusi Anda adalah yang paling signifikan dibandingkan yang lain. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Merasa bangga secara pribadi namun tetap merayakan keberhasilan tersebut sebagai pencapaian tim secara keseluruhan.", B: "Menceritakan kepada rekan terdekat tentang besarnya kontribusi Anda.", C: "Mengharapkan pengakuan khusus dari atasan atas kontribusi saya.", D: "Merasa pujian tersebut seharusnya lebih ditujukan kepada saya.", E: "Menunjukkan secara tersirat kepada tim bahwa saya yang paling berjasa." } },
+            { category: "TKP", question: "Anda diminta untuk menjadi mentor bagi seorang pegawai baru. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Menyusun program bimbingan kecil, meluangkan waktu secara rutin, dan berbagi pengetahuan dengan sabar untuk membantunya cepat beradaptasi.", B: "Memberikan nomor telepon saya dan memintanya bertanya jika ada kesulitan.", C: "Hanya mengajarinya dasar-dasar pekerjaan saja.", D: "Merasa tugas saya bertambah dan mengerjakannya dengan kurang bersemangat.", E: "Menolaknya karena saya sudah punya banyak pekerjaan." } },
+            { category: "TKP", question: "Saat rapat online, koneksi internet Anda tiba-tiba melambat sehingga Anda kesulitan mengikuti diskusi. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Segera memberitahu moderator melalui chat, mematikan video untuk menghemat bandwidth, dan berusaha tetap fokus pada audio.", B: "Keluar dari rapat dan mencoba bergabung kembali.", C: "Tetap diam dan berharap koneksi segera membaik.", D: "Menunggu sampai ada yang bertanya mengapa saya diam.", E: "Meninggalkan rapat karena frustrasi." } },
+            { category: "TKP", question: "Anda melihat ada pemborosan penggunaan kertas di kantor Anda. Anda akan...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Mengusulkan ide program 'paperless' atau gerakan hemat kertas kepada atasan atau bagian terkait, dimulai dari diri sendiri.", B: "Membuat poster sederhana tentang hemat kertas dan menempelkannya di dekat printer.", C: "Mengingatkan rekan yang boros secara langsung.", D: "Tidak peduli karena kertas disediakan oleh kantor.", E: "Ikut menggunakan kertas sesuka hati." } },
+            { category: "TKP", question: "Saat bekerja dalam tim, Anda lebih suka...", scores: { A: 5, B: 4, C: 3, D: 2, E: 1 }, options: { A: "Mendengarkan semua pendapat terlebih dahulu, lalu memberikan usulan yang merangkum atau menyempurnakan ide-ide yang ada.", B: "Menjadi yang pertama memberikan ide cemerlang.", C: "Mengikuti arahan dari pemimpin tim saja.", D: "Mengerjakan bagian saya sendiri dengan baik tanpa banyak berdiskusi.", E: "Menjadi pengamat dan hanya berbicara jika ditanya." } }
+        ];
+
+        // --- Variabel & State ---
+        let currentTestState = {};
+        let timerInterval;
+        const TOTAL_QUESTIONS = 110;
+        const TEST_DURATION_SECONDS = 130 * 60;
+        const CORRECT_USERNAME = "EduPlayer";
+        const CORRECT_PASSWORD = "EduNavSKD2025";
+        
+        // --- Referensi Elemen DOM ---
+        const pages = {
+            login: document.getElementById('login-page'),
+            home: document.getElementById('home-page'),
+            test: document.getElementById('test-page'),
+            results: document.getElementById('results-page'),
+            historyDetail: document.getElementById('history-detail-page'),
+        };
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const startNewTestButton = document.getElementById('start-new-test-button');
+        const historyList = document.getElementById('history-list');
+        const noHistory = document.getElementById('no-history');
+        const categoryTitleEl = document.getElementById('category-title');
+        const questionNumberEl = document.getElementById('question-number');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const navigationGrid = document.getElementById('navigation-grid');
+        const timerEl = document.getElementById('timer');
+        const finishTestButton = document.getElementById('finish-test-button');
+        const prevQuestionButton = document.getElementById('prev-question-button');
+        const nextQuestionButton = document.getElementById('next-question-button');
+        const feedbackSection = document.getElementById('feedback-section');
+        const hintButton = document.getElementById('hint-button');
+        const hintBox = document.getElementById('hint-box');
+        const pembahasanBox = document.getElementById('pembahasan-box');
+        const pembahasanText = document.getElementById('pembahasan-text');
+        const tkpAnalysisSection = document.getElementById('tkp-analysis-section');
+        const tkpAnalysisButton = document.getElementById('tkp-analysis-button');
+        const resultSummaryEl = document.getElementById('result-summary');
+        const goToHomeButton = document.getElementById('go-to-home-button');
+        const sendWhatsappButton = document.getElementById('send-whatsapp-button');
+        const historyDetailDateEl = document.getElementById('history-detail-date');
+        const historyDetailSummaryEl = document.getElementById('history-detail-summary');
+        const historyDetailQuestionsEl = document.getElementById('history-detail-questions');
+        const confirmModal = document.getElementById('confirm-modal');
+        const creditsModal = document.getElementById('credits-modal');
+        const infoModal = document.getElementById('info-modal');
+        const confirmModalYes = document.getElementById('confirm-modal-yes');
+        const confirmModalNo = document.getElementById('confirm-modal-no');
+        const closeCreditsButton = document.getElementById('close-credits-button');
+        const closeInfoModal = document.getElementById('close-info-modal');
+        const generatePracticeButton = document.getElementById('generate-practice-button');
+
+        // --- Sound Engine ---
+        let sounds;
+        function setupAudio() {
+            sounds = {
+                click: new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 } }).toDestination(),
+                correct: new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.005, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination(),
+                wrong: new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.2 } }).toDestination(),
+                finish: new Tone.Synth({ oscillator: { type: "sawtooth" }, envelope: { attack: 0.01, decay: 0.5, sustain: 0.3, release: 0.5 } }).toDestination(),
+                gemini: new Tone.PluckSynth().toDestination(),
+            };
+            sounds.isReady = true;
+        }
+
+        // --- Fungsi Utama ---
+        function showPage(pageId) {
+            Object.values(pages).forEach(page => page.classList.remove('active-page'));
+            pages[pageId].classList.add('active-page');
+        }
+
+        function displayQuestion(index) {
+            currentTestState.currentQuestionIndex = index;
+            const question = questions[index];
+            if (!question) return; // Guard clause
+            
+            categoryTitleEl.textContent = question.category;
+            questionNumberEl.textContent = index + 1;
+            questionTextEl.textContent = question.question;
+            optionsContainer.innerHTML = '';
+            
+            feedbackSection.classList.add('hidden');
+            hintBox.classList.add('hidden');
+            pembahasanBox.classList.add('hidden');
+            tkpAnalysisSection.classList.add('hidden');
+            hintButton.textContent = 'Tampilkan Petunjuk';
+
+            if(question.category !== 'TKP') {
+                feedbackSection.classList.remove('hidden');
+                hintBox.textContent = question.hint;
+            }
+
+            const optionKeys = Object.keys(question.options);
+            optionKeys.forEach(key => {
+                const value = question.options[key];
+                const optionButton = document.createElement('button');
+                optionButton.className = 'p-4 border border-gray-300 rounded-lg text-left hover:bg-indigo-50 hover:border-indigo-400 transition-colors';
+                
+                if (currentTestState.answers[index]) {
+                    optionButton.disabled = true;
+                    if(question.category !== 'TKP') {
+                        if (key === question.answer) optionButton.classList.add('bg-green-100', 'border-green-500');
+                        else if (key === currentTestState.answers[index]) optionButton.classList.add('bg-red-100', 'border-red-500');
+                    } else {
+                         if (key === currentTestState.answers[index]) {
+                            optionButton.classList.add('bg-indigo-100', 'border-indigo-500');
+                            tkpAnalysisSection.classList.remove('hidden');
+                         }
+                    }
+                } else {
+                    optionButton.onclick = () => selectAnswer(index, key);
+                }
+                
+                optionButton.innerHTML = `<span class="font-bold mr-2">${key}.</span> ${value}`;
+                optionsContainer.appendChild(optionButton);
+            });
+            
+            if (currentTestState.answers[index] && question.category !== 'TKP') {
+                pembahasanText.textContent = question.pembahasan;
+                pembahasanBox.classList.remove('hidden');
+            }
+            
+            // Update Next/Prev button states
+            prevQuestionButton.disabled = index === 0;
+            nextQuestionButton.disabled = index === TOTAL_QUESTIONS - 1;
+
+            updateNavigationButtons();
+        }
+
+        function selectAnswer(questionIndex, answerKey) {
+            currentTestState.answers[questionIndex] = answerKey;
+            const question = questions[questionIndex];
+            if (sounds.isReady) {
+                if (question.category !== 'TKP') {
+                    if (answerKey === question.answer) sounds.correct.triggerAttackRelease("C5", "8n");
+                    else sounds.wrong.triggerAttackRelease("C3", "8n");
+                } else {
+                    sounds.click.triggerAttackRelease("C4", "8n");
+                }
+            }
+            displayQuestion(questionIndex);
+        }
+        
+        function updateNavigationButtons() {
+            Array.from(navigationGrid.children).forEach((button, index) => {
+                button.classList.remove('nav-button-current', 'nav-button-answered');
+                if (index === currentTestState.currentQuestionIndex) button.classList.add('nav-button-current');
+                else if (currentTestState.answers[index] !== undefined) button.classList.add('nav-button-answered');
+            });
+        }
+        
+        function startTimer() {
+            let remainingTime = TEST_DURATION_SECONDS;
+            timerEl.textContent = `${Math.floor(remainingTime/60)}:00`;
+            timerInterval = setInterval(() => {
+                if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
+                    finishTest();
+                    return;
+                }
+                remainingTime--;
+                const minutes = Math.floor(remainingTime / 60);
+                const seconds = remainingTime % 60;
+                timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 1000);
+        }
+        
+        function startNewTest() {
+            if (sounds.isReady) sounds.click.triggerAttackRelease("E4", "8n");
+            currentTestState = {
+                id: Date.now(),
+                answers: {},
+                currentQuestionIndex: 0,
+            };
+            showPage('test');
+            displayQuestion(0);
+            startTimer();
+        }
+
+        function finishTest() {
+            clearInterval(timerInterval);
+            if (sounds.isReady) sounds.finish.triggerAttackRelease("G5", "4n");
+            
+            const results = calculateResults(currentTestState.answers);
+            currentTestState = {...currentTestState, ...results};
+            
+            saveHistory(currentTestState);
+            displayResults(currentTestState);
+            showPage('results');
+        }
+        
+        function calculateResults(answers) {
+            let twkScore = 0, tiuScore = 0, tkpScore = 0;
+            const ambangBatas = { TWK: 65, TIU: 80, TKP: 166 };
+
+            for (let i = 0; i < TOTAL_QUESTIONS; i++) {
+                const question = questions[i];
+                const userAnswer = answers[i];
+                if (userAnswer) {
+                    if (question.category === "TWK" && userAnswer === question.answer) twkScore += 5;
+                    else if (question.category === "TIU" && userAnswer === question.answer) tiuScore += 5;
+                    else if (question.category === "TKP") tkpScore += question.scores[userAnswer];
+                }
+            }
+            
+            const totalScore = twkScore + tiuScore + tkpScore;
+            const isOverallPass = (twkScore >= ambangBatas.TWK) && (tiuScore >= ambangBatas.TIU) && (tkpScore >= ambangBatas.TKP);
+            
+            return { totalScore, twkScore, tiuScore, tkpScore, isOverallPass, ambangBatas };
+        }
+        
+        function displayResults(results) {
+            const { totalScore, twkScore, tiuScore, tkpScore, isOverallPass, ambangBatas } = results;
+            const resultHTML = `
+                <h1 class="text-3xl font-extrabold ${isOverallPass ? 'text-green-600' : 'text-red-600'}">
+                    ${isOverallPass ? 'SELAMAT, ANDA LULUS!' : 'MAAF, ANDA BELUM LULUS'}
+                </h1>
+                <p class="text-gray-600 mt-2">Total Skor Akhir Anda:</p>
+                <p class="text-6xl font-bold text-indigo-600 my-4">${totalScore}</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                    <div class="p-4 rounded-lg ${twkScore >= ambangBatas.TWK ? 'bg-green-50' : 'bg-red-50'}">
+                        <p class="text-sm font-bold text-gray-500">TWK</p>
+                        <p class="text-2xl font-bold">${twkScore}</p>
+                    </div>
+                    <div class="p-4 rounded-lg ${tiuScore >= ambangBatas.TIU ? 'bg-green-50' : 'bg-red-50'}">
+                        <p class="text-sm font-bold text-gray-500">TIU</p>
+                        <p class="text-2xl font-bold">${tiuScore}</p>
+                    </div>
+                    <div class="p-4 rounded-lg ${tkpScore >= ambangBatas.TKP ? 'bg-green-50' : 'bg-red-50'}">
+                        <p class="text-sm font-bold text-gray-500">TKP</p>
+                        <p class="text-2xl font-bold">${tkpScore}</p>
+                    </div>
+                </div>
+            `;
+            resultSummaryEl.innerHTML = resultHTML;
+
+            const whatsappText = `
+Halo, saya telah menyelesaikan simulasi SKD di EduNav.
+Berikut adalah rekap hasil saya:
+STATUS: ${isOverallPass ? 'LULUS' : 'TIDAK LULUS'}
+TOTAL SKOR: ${totalScore}
+--- Rincian Skor ---
+TWK: ${twkScore} (Ambang Batas: ${ambangBatas.TWK})
+TIU: ${tiuScore} (Ambang Batas: ${ambangBatas.TIU})
+TKP: ${tkpScore} (Ambang Batas: ${ambangBatas.TKP})
+Terima kasih EduNav!
+            `.trim().replace(/\n/g, "%0A");
+            
+            sendWhatsappButton.href = `https://wa.me/6289530471620?text=${whatsappText}`;
+        }
+
+        function saveHistory(testResult) {
+            const history = JSON.parse(localStorage.getItem('skdHistory') || '[]');
+            history.unshift(testResult);
+            localStorage.setItem('skdHistory', JSON.stringify(history));
+        }
+
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('skdHistory') || '[]');
+            if (history.length > 0) {
+                noHistory.classList.add('hidden');
+                historyList.innerHTML = '';
+                history.forEach((item, index) => {
+                    const statusClass = item.isOverallPass ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                    const statusText = item.isOverallPass ? 'LULUS' : 'TIDAK LULUS';
+                    const historyCard = `
+                        <div class="bg-white p-4 rounded-lg shadow-sm flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer" onclick="showHistoryDetail(${index})">
+                            <div>
+                                <p class="font-bold text-lg">${item.totalScore} <span class="text-sm font-normal text-gray-500">Total Skor</span></p>
+                                <p class="text-xs text-gray-400">${new Date(item.id).toLocaleString('id-ID')}</p>
+                            </div>
+                            <div class="font-bold text-xs px-2 py-1 rounded-full ${statusClass}">${statusText}</div>
+                        </div>
+                    `;
+                    historyList.innerHTML += historyCard;
+                });
+            } else {
+                noHistory.classList.remove('hidden');
+                historyList.innerHTML = '';
+            }
+        }
+
+        function showHistoryDetail(index) {
+            if (sounds.isReady) sounds.click.triggerAttackRelease("F4", "8n");
+            const history = JSON.parse(localStorage.getItem('skdHistory') || '[]');
+            const item = history[index];
+            if (!item) return;
+
+            historyDetailDateEl.textContent = `Waktu Pengerjaan: ${new Date(item.id).toLocaleString('id-ID')}`;
+            
+            const summaryHTML = `
+                <div class="bg-indigo-50 p-6 rounded-xl text-center">
+                    <p class="text-gray-600">Total Skor</p>
+                    <p class="text-5xl font-extrabold text-indigo-600">${item.totalScore}</p>
+                    <div class="mt-4 grid grid-cols-3 gap-2 text-sm">
+                        <div><p>TWK: <span class="font-bold">${item.twkScore}</span></p></div>
+                        <div><p>TIU: <span class="font-bold">${item.tiuScore}</span></p></div>
+                        <div><p>TKP: <span class="font-bold">${item.tkpScore}</span></p></div>
+                    </div>
+                </div>
+            `;
+            historyDetailSummaryEl.innerHTML = summaryHTML;
+
+            historyDetailQuestionsEl.innerHTML = '';
+            questions.forEach((q, i) => {
+                const userAnswer = item.answers[i];
+                let answerStatus = '';
+                let answerClass = 'bg-gray-100';
+
+                if (userAnswer) {
+                    if (q.category !== 'TKP') {
+                        if (userAnswer === q.answer) {
+                            answerStatus = '<span class="text-green-600 font-bold">Benar</span>';
+                            answerClass = 'bg-green-50';
+                        } else {
+                            answerStatus = `<span class="text-red-600 font-bold">Salah</span> (Kunci: ${q.answer})`;
+                            answerClass = 'bg-red-50';
+                        }
+                    } else {
+                        answerStatus = `<span class="text-indigo-600 font-bold">Poin: ${q.scores[userAnswer]}</span>`;
+                        answerClass = 'bg-indigo-50';
+                    }
+                } else {
+                    answerStatus = '<span class="text-gray-500">Tidak Dijawab</span>';
+                }
+
+                const questionHTML = `
+                    <div class="p-4 rounded-lg ${answerClass}">
+                        <p class="font-semibold">${i + 1}. ${q.question}</p>
+                        <p class="mt-2 text-sm">Jawaban Anda: <span class="font-bold">${userAnswer || '-'}</span> | ${answerStatus}</p>
+                        ${(q.category !== 'TKP' && userAnswer) ? `<div class="mt-2 pt-2 border-t border-gray-200 text-sm text-gray-600"><p><strong>Pembahasan:</strong> ${q.pembahasan}</p></div>` : ''}
+                    </div>
+                `;
+                historyDetailQuestionsEl.innerHTML += questionHTML;
+            });
+
+            showPage('historyDetail');
+        }
+
+        function showModal(modal) {
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            setTimeout(() => modal.querySelector('.modal-content').classList.remove('scale-95', 'opacity-0'), 50);
+        }
+
+        function hideModal(modal) {
+            modal.querySelector('.modal-content').classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('opacity-0'), 50);
+            setTimeout(() => modal.classList.add('hidden'), 350);
+        }
+
+        // --- Event Listeners ---
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!sounds || !sounds.isReady) setupAudio();
+            
+            if (username.value === CORRECT_USERNAME && password.value === CORRECT_PASSWORD) {
+                if(sounds.isReady) sounds.click.triggerAttackRelease("C5", "8n");
+                loginError.classList.add('hidden');
+                loadHistory();
+                showPage('home');
+            } else {
+                if(sounds.isReady) sounds.wrong.triggerAttackRelease("A2", "8n");
+                loginError.textContent = "Username atau Password salah.";
+                loginError.classList.remove('hidden');
+            }
+        });
+
+        startNewTestButton.addEventListener('click', startNewTest);
+        finishTestButton.addEventListener('click', () => {
+            if (sounds.isReady) sounds.click.triggerAttackRelease("A4", "8n");
+            showModal(confirmModal);
+        });
+        confirmModalNo.addEventListener('click', () => hideModal(confirmModal));
+        confirmModalYes.addEventListener('click', () => {
+            hideModal(confirmModal);
+            setTimeout(finishTest, 350);
+        });
+        
+        hintButton.addEventListener('click', () => {
+            hintBox.classList.toggle('hidden');
+            hintButton.textContent = hintBox.classList.contains('hidden') ? 'Tampilkan Petunjuk' : 'Sembunyikan Petunjuk';
+            if (sounds.isReady) sounds.click.triggerAttackRelease("G4", "8n");
+        });
+
+        goToHomeButton.addEventListener('click', () => {
+            if (sounds.isReady) sounds.click.triggerAttackRelease("C4", "8n");
+            showModal(creditsModal);
+        });
+
+        closeCreditsButton.addEventListener('click', () => {
+            if (sounds.isReady) sounds.click.triggerAttackRelease("C5", "8n");
+            hideModal(creditsModal);
+            loadHistory();
+            showPage('home');
+        });
+        
+        function showComingSoon() {
+            if (sounds.isReady) sounds.gemini.triggerAttackRelease("A3", "8n");
+            showModal(infoModal);
+        }
+
+        tkpAnalysisButton.addEventListener('click', showComingSoon);
+        generatePracticeButton.addEventListener('click', showComingSoon);
+        closeInfoModal.addEventListener('click', () => hideModal(infoModal));
+
+        prevQuestionButton.addEventListener('click', () => {
+            if (currentTestState.currentQuestionIndex > 0) {
+                if (sounds.isReady) sounds.click.triggerAttackRelease("D4", "8n");
+                displayQuestion(currentTestState.currentQuestionIndex - 1);
+            }
+        });
+
+        nextQuestionButton.addEventListener('click', () => {
+            if (currentTestState.currentQuestionIndex < TOTAL_QUESTIONS - 1) {
+                if (sounds.isReady) sounds.click.triggerAttackRelease("F4", "8n");
+                displayQuestion(currentTestState.currentQuestionIndex + 1);
+            }
+        });
+
+        // --- Inisialisasi Aplikasi ---
+        function initializeAppLogic() {
+            for (let i = 0; i < TOTAL_QUESTIONS; i++) {
+                const button = document.createElement('button');
+                button.textContent = i + 1;
+                button.className = 'nav-button w-full h-10 border border-gray-300 rounded-md hover:bg-gray-200';
+                button.onclick = () => {
+                    if (sounds.isReady) sounds.click.triggerAttackRelease("E4", "8n");
+                    displayQuestion(i);
+                }
+                navigationGrid.appendChild(button);
+            }
+            showPage('login');
+        }
+        
+        initializeAppLogic();
+    });
+    </script>
+</body>
+</html>
