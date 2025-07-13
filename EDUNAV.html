@@ -30,6 +30,8 @@
             border: none;
             color: white;
         }
+        .option-figural { display: flex; justify-content: center; align-items: center; min-height: 80px; }
+        .option-figural svg { width: 60px; height: 60px; }
     </style>
 </head>
 <body class="text-gray-800">
@@ -199,7 +201,7 @@
     
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- Bank Soal SKD (100 Soal) ---
+        // --- Bank Soal SKD (110 Soal) ---
         const questions = [
             // --- TWK (30 Soal) ---
             { category: "TWK", question: "Pancasila sebagai ideologi terbuka memiliki 3 dimensi nilai. Nilai yang merupakan penjabaran dari nilai dasar ideologi sehingga menjadi lebih operasional dan eksplisit adalah nilai...", options: { A: "Dasar", B: "Instrumental", C: "Praksis", D: "Idealisme", E: "Normatif" }, answer: "B", hint: "Pikirkan tentang 'instrumen' atau alat untuk melaksanakan nilai dasar.", pembahasan: "Nilai Instrumental adalah penjabaran lebih lanjut dari nilai-nilai dasar ideologi Pancasila, biasanya dalam bentuk UUD 1945, Tap MPR, dan peraturan perundang-undangan lainnya." },
@@ -237,31 +239,60 @@
             { category: "TIU", question: "Semua pekerja mengenakan helm. Sebagian pekerja mengenakan sarung tangan. Kesimpulan yang paling tepat adalah...", options: { A: "Ada pekerja yang tidak mengenakan helm", B: "Semua pekerja mengenakan sarung tangan", C: "Sebagian pekerja mengenakan helm dan sarung tangan", D: "Pekerja yang mengenakan sarung tangan tidak mengenakan helm", E: "Semua pekerja yang tidak mengenakan sarung tangan, mengenakan helm" }, answer: "C", hint: "Gabungkan dua pernyataan tersebut. Ada irisan antara 'pekerja berhelm' dan 'pekerja bersarung tangan'.", pembahasan: "Karena 'sebagian pekerja mengenakan sarung tangan' dan 'semua pekerja mengenakan helm', maka sebagian pekerja tersebut pasti mengenakan keduanya (helm dan sarung tangan)." },
             { category: "TIU", question: "Deret: 4, 5, 7, 10, 14, 19, ...", options: { A: "24", B: "25", C: "26", D: "27", E: "28" }, answer: "B", hint: "Perhatikan selisih antar angka yang berurutan.", pembahasan: "Pola deret ini adalah penambahan berurut: +1, +2, +3, +4, +5. Maka angka selanjutnya adalah 19 + 6 = 25." },
             { category: "TIU", question: "Jika x = berat total 5 kotak dengan masing-masing berat 10 kg, dan y = berat total 10 kotak dengan masing-masing berat 5 kg, maka...", options: { A: "x > y", B: "x < y", C: "x = y", D: "2x = y", E: "Hubungan tidak dapat ditentukan" }, answer: "C", hint: "Hitung total berat untuk x dan y.", pembahasan: "x = 5 * 10 = 50 kg. y = 10 * 5 = 50 kg. Jadi, x = y." },
-            { category: "TIU", question: "Gambar yang memiliki pola berbeda dari yang lain adalah...", options: { A: "Segi enam beraturan", B: "Bintang lima sudut", C: "Persegi", D: "Segitiga sama sisi", E: "Lingkaran" }, answer: "E", hint: "Pikirkan tentang sisi lurus.", pembahasan: "Semua pilihan (A, B, C, D) adalah bangun yang terbentuk dari garis lurus, sedangkan lingkaran terbentuk dari garis lengkung." },
+            { category: "TIU", question: "Manakah gambar yang berbeda?", isFigural: true, options: { 
+                A: `<svg class="option-svg" viewBox="0 0 20 20"><path d="M10 2 L18 18 L2 18 Z" stroke="black" fill="none" stroke-width="1"/></svg>`, 
+                B: `<svg class="option-svg" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" stroke="black" fill="none" stroke-width="1"/></svg>`, 
+                C: `<svg class="option-svg" viewBox="0 0 20 20"><path d="M2 10 L10 2 L18 10 L10 18 Z" stroke="black" fill="none" stroke-width="1"/></svg>`, 
+                D: `<svg class="option-svg" viewBox="0 0 20 20"><polygon points="10,2 18,7 15,18 5,18 2,7" stroke="black" fill="none" stroke-width="1"/></svg>`, 
+                E: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="black" fill="none" stroke-width="1"/></svg>` 
+            }, answer: "E", hint: "Pikirkan tentang sisi lurus.", pembahasan: "Semua pilihan (A, B, C, D) adalah bangun yang terbentuk dari garis lurus (poligon), sedangkan lingkaran terbentuk dari garis lengkung." },
             { category: "TIU", question: "KOLEGA : TEMAN :: ... : ...", options: { A: "Ayah : Ibu", B: "Guru : Murid", C: "Musuh : Lawan", D: "Buku : Pensil", E: "Rumah : Gedung" }, answer: "C", hint: "Cari hubungan sinonim atau kata dengan makna yang sangat mirip.", pembahasan: "Kolega adalah sinonim dari teman (dalam konteks kerja). Musuh adalah sinonim dari lawan." },
             { category: "TIU", question: "Sebuah proyek dijadwalkan selesai dalam 30 hari oleh 15 pekerja. Setelah 6 hari berjalan, proyek terhenti selama 4 hari. Berapa tambahan pekerja yang dibutuhkan agar proyek selesai tepat waktu?", options: { A: "3", B: "4", C: "5", D: "6", E: "7" }, answer: "A", hint: "Hitung sisa pekerjaan dan sisa waktu yang tersedia.", pembahasan: "Sisa hari normal: 30-6 = 24 hari. Sisa pekerja: 15. Sisa waktu setelah terhenti: 24-4 = 20 hari. Maka, (24 hari * 15 pekerja) / 20 hari = 18 pekerja. Tambahan pekerja = 18 - 15 = 3 orang." },
             { category: "TIU", question: "Berapakah 62.5% dari 160?", options: { A: "90", B: "95", C: "100", D: "105", E: "110" }, answer: "C", hint: "62.5% sama dengan 5/8.", pembahasan: "62.5% = 5/8. Maka (5/8) * 160 = 5 * 20 = 100." },
-            { category: "TIU", question: "Jika hari ini adalah hari Rabu, maka 100 hari yang akan datang adalah hari...", options: { A: "Kamis", B: "Jumat", C: "Sabtu", D: "Minggu", E: "Senin" }, answer: "B", hint: "Bagi 100 dengan 7 dan perhatikan sisanya.", pembahasan: "100 dibagi 7 adalah 14 dengan sisa 2. Jadi, 100 hari lagi adalah Rabu + 2 hari = Jumat." },
+            { category: "TIU", question: "Pola gambar selanjutnya adalah...", isFigural: true, options: { 
+                A: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="black" fill="none" stroke-width="1"/><line x1="10" y1="2" x2="10" y2="18" stroke="black" stroke-width="1"/></svg>`, 
+                B: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="black" fill="none" stroke-width="1"/><line x1="2" y1="10" x2="18" y2="10" stroke="black" stroke-width="1"/></svg>`, 
+                C: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="black" fill="none" stroke-width="1"/><line x1="10" y1="2" x2="10" y2="18" stroke="black" stroke-width="1"/><line x1="2" y1="10" x2="18" y2="10" stroke="black" stroke-width="1"/></svg>`, 
+                D: `<svg class="option-svg" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" stroke="black" fill="none" stroke-width="1"/><line x1="10" y1="3" x2="10" y2="17" stroke="black" stroke-width="1"/></svg>`, 
+                E: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="black" fill="none" stroke-width="1"/></svg>` 
+            }, answer: "C", hint: "Perhatikan perputaran garis di dalam lingkaran.", pembahasan: "Pola menunjukkan sebuah garis di dalam lingkaran yang berputar 45 derajat searah jarum jam setiap langkahnya. Langkah pertama vertikal, kedua diagonal. Langkah ketiga seharusnya horizontal. Pilihan C menunjukkan garis vertikal dan horizontal, yang merupakan gabungan langkah pertama dan ketiga." },
             { category: "TIU", question: "ABSURD >< ...", options: { A: "Mustahil", B: "Aneh", C: "Masuk Akal", D: "Janggal", E: "Konyol" }, answer: "C", hint: "Cari lawan kata dari 'tidak masuk akal'.", pembahasan: "Absurd berarti tidak masuk akal atau mustahil. Lawan katanya adalah masuk akal (logis)." },
             { category: "TIU", question: "Jika semua tanaman adalah makhluk hidup dan semua mawar adalah tanaman, maka...", options: { A: "Semua makhluk hidup adalah mawar", B: "Semua mawar adalah makhluk hidup", C: "Sebagian mawar bukan makhluk hidup", D: "Semua tanaman adalah mawar", E: "Tidak ada kesimpulan yang benar" }, answer: "B", hint: "Gunakan logika silogisme (A=B, C=A, maka C=B).", pembahasan: "Ini adalah silogisme. Jika semua mawar adalah tanaman (A), dan semua tanaman adalah makhluk hidup (B), maka kesimpulannya adalah semua mawar adalah makhluk hidup." },
             { category: "TIU", question: "Deret: Z, W, T, Q, N, ...", options: { A: "K", B: "J", C: "I", D: "H", E: "L" }, answer: "A", hint: "Ini adalah deret mundur dengan pola tertentu.", pembahasan: "Polanya adalah mundur 3 langkah dalam alfabet. Z -> W (-3), W -> T (-3), T -> Q (-3), Q -> N (-3). Maka selanjutnya adalah N - 3 = K." },
             { category: "TIU", question: "Sebuah kubus memiliki volume 729 cm³. Berapa luas salah satu sisinya?", options: { A: "9 cm²", B: "27 cm²", C: "54 cm²", D: "81 cm²", E: "108 cm²" }, answer: "D", hint: "Cari dulu panjang rusuknya dengan akar pangkat tiga dari volume.", pembahasan: "Panjang rusuk (s) = ³√729 = 9 cm. Luas salah satu sisi = s * s = 9 * 9 = 81 cm²." },
-            { category: "TIU", question: "Harga 3 buku dan 2 pensil adalah Rp 11.500. Harga 2 buku dan 1 pensil adalah Rp 7.250. Berapa harga 5 buku dan 3 pensil?", options: { A: "Rp 18.750", B: "Rp 19.250", C: "Rp 20.000", D: "Rp 21.500", E: "Rp 22.750" }, answer: "A", hint: "Gunakan metode eliminasi atau substitusi untuk menemukan harga satuan.", pembahasan: "Eliminasi: 2(2B+P) = 4B+2P = 14500. (4B+2P)-(3B+2P)=B=3000. Substitusi: 2(3000)+P=7250 -> P=1250. Maka 5B+3P = 5(3000)+3(1250) = 15000+3750 = 18750." },
+            { category: "TIU", question: "Analogi Gambar: Gambar A berhubungan dengan Gambar B, seperti Gambar C berhubungan dengan...", isFigural: true, options: { 
+                A: `<svg class="option-svg" viewBox="0 0 20 20"><rect x="4" y="4" width="12" height="12" stroke="black" fill="none" stroke-width="1"/><circle cx="10" cy="10" r="3" fill="black"/></svg>`, 
+                B: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="black" fill="none" stroke-width="1"/><rect x="8" y="8" width="4" height="4" fill="black"/></svg>`, 
+                C: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="black" fill="black"/><rect x="8" y="8" width="4" height="4" fill="white"/></svg>`, 
+                D: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="black" fill="none" stroke-width="1"/><rect x="7" y="7" width="6" height="6" fill="none" stroke="black" stroke-width="1"/></svg>`, 
+                E: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="black" fill="none" stroke-width="1"/><rect x="8" y="8" width="4" height="4" fill="none" stroke-width="1"/></svg>` 
+            }, answer: "B", hint: "Perhatikan perubahan bentuk luar dan dalam, serta perubahan warna.", pembahasan: "Pola analoginya adalah: bentuk luar menjadi bentuk dalam, bentuk dalam menjadi bentuk luar. Warna juga dibalik (putih menjadi hitam, hitam menjadi putih). Pada soal, lingkaran hitam di dalam persegi putih. Maka jawabannya adalah persegi putih di dalam lingkaran hitam." },
             { category: "TIU", question: "TANDON : AIR :: ... : ...", options: { A: "Bank : Uang", B: "Rumah : Keluarga", C: "Sekolah : Siswa", D: "Lampu : Terang", E: "Buku : Ilmu" }, answer: "A", hint: "Hubungannya adalah 'wadah tempat menyimpan'.", pembahasan: "Tandon adalah wadah untuk menyimpan air. Bank adalah lembaga untuk menyimpan uang." },
             { category: "TIU", question: "Jika x = (1/4) / (1/8) dan y = 0.25 * 4, maka...", options: { A: "x > y", B: "x < y", C: "x = y", D: "x = 2y", E: "Hubungan tidak dapat ditentukan" }, answer: "D", hint: "Selesaikan operasi untuk x dan y secara terpisah.", pembahasan: "x = (1/4) * 8 = 2. y = 0.25 * 4 = 1. Jadi, x > y dan lebih spesifik x = 2y." },
             { category: "TIU", question: "Jika beberapa A adalah B, dan semua B adalah C, maka...", options: { A: "Semua A adalah C", B: "Beberapa A adalah C", C: "Tidak ada A yang C", D: "Semua C adalah A", E: "Tidak dapat ditarik kesimpulan" }, answer: "B", hint: "Hanya 'beberapa' A yang masuk ke dalam himpunan B, yang semuanya adalah C.", pembahasan: "Karena hanya beberapa A yang merupakan B, dan semua B adalah C, maka dapat dipastikan bahwa setidaknya beberapa A tersebut juga merupakan C." },
             { category: "TIU", question: "Deret: 1, 3, 4, 7, 11, 18, ...", options: { A: "25", B: "27", C: "29", D: "31", E: "33" }, answer: "C", hint: "Ini adalah deret Fibonacci, di mana angka berikutnya adalah jumlah dari dua angka sebelumnya.", pembahasan: "Setiap angka adalah hasil penjumlahan dua angka sebelumnya (1+3=4, 3+4=7, 4+7=11, 7+11=18). Maka angka selanjutnya adalah 11 + 18 = 29." },
             { category: "TIU", question: "Seorang pedagang membeli barang dengan harga Rp 80.000 dan menjualnya dengan keuntungan 15%. Berapa harga jual barang tersebut?", options: { A: "Rp 88.000", B: "Rp 90.000", C: "Rp 92.000", D: "Rp 95.000", E: "Rp 102.000" }, answer: "C", hint: "Hitung 15% dari 80.000 lalu tambahkan ke harga beli.", pembahasan: "Keuntungan = 15% * 80.000 = 12.000. Harga jual = Harga beli + Keuntungan = 80.000 + 12.000 = Rp 92.000." },
             { category: "TIU", question: "EVOKASI = ...", options: { A: "Menggugah rasa", B: "Menilai", C: "Mengubah", D: "Menyatukan", E: "Mengungsikan" }, answer: "A", hint: "Kata ini berhubungan dengan membangkitkan kenangan atau perasaan.", pembahasan: "Evokasi adalah tindakan membangkitkan atau menggugah perasaan, kenangan, atau emosi." },
-            { category: "TIU", question: "Jika ada angsa, ia berwarna putih. Di halaman ada binatang berwarna putih. Kesimpulannya...", options: { A: "Binatang itu pasti angsa", B: "Binatang itu bukan angsa", C: "Mungkin binatang itu angsa", D: "Semua binatang di halaman adalah angsa", E: "Tidak dapat ditarik kesimpulan" }, answer: "E", hint: "Pernyataan 'Jika A maka B' tidak berarti 'Jika B maka A'.", pembahasan: "Kesalahan logika (fallacy). Meskipun semua angsa berwarna putih, tidak berarti semua yang berwarna putih adalah angsa. Bisa saja itu kucing putih atau kelinci putih. Jadi, tidak ada kesimpulan pasti yang bisa ditarik." },
-            { category: "TIU", question: "Sebuah mobil berjalan dengan kecepatan rata-rata 60 km/jam. Berapa jarak yang ditempuh dalam 2 jam 30 menit?", options: { A: "120 km", B: "135 km", C: "150 km", D: "160 km", E: "180 km" }, answer: "C", hint: "Ubah 2 jam 30 menit menjadi jam (2.5 jam).", pembahasan: "Jarak = Kecepatan * Waktu = 60 km/jam * 2.5 jam = 150 km." },
+            { category: "TIU", question: "Pencerminan dari gambar berikut adalah...", isFigural: true, options: { 
+                A: `<svg class="option-svg" viewBox="0 0 20 20"><path d="M2 2 L18 10 L2 18 Z" fill="black"/></svg>`, 
+                B: `<svg class="option-svg" viewBox="0 0 20 20"><path d="M18 2 L2 10 L18 18 Z" fill="black"/></svg>`, 
+                C: `<svg class="option-svg" viewBox="0 0 20 20"><path d="M2 2 L10 18 L18 2 Z" fill="black"/></svg>`, 
+                D: `<svg class="option-svg" viewBox="0 0 20 20"><path d="M2 18 L18 10 L2 2 Z" fill="black"/></svg>`, 
+                E: `<svg class="option-svg" viewBox="0 0 20 20"><path d="M18 18 L2 10 L18 2 Z" fill="black"/></svg>` 
+            }, answer: "B", hint: "Bayangkan ada cermin vertikal di sebelah kanan gambar soal.", pembahasan: "Soal meminta pencerminan dari segitiga siku-siku yang menunjuk ke kanan. Hasil pencerminannya adalah segitiga siku-siku yang menunjuk ke kiri, seperti pada pilihan B." },
             { category: "TIU", question: "Deret: 1, 5, 4, 8, 7, 11, 10, ...", options: { A: "13", B: "14", C: "15", D: "16", E: "9" }, answer: "B", hint: "Ada dua pola yang berjalan berselang-seling.", pembahasan: "Ini adalah deret larik 2. Pola pertama: 1, 4, 7, 10 (+3). Pola kedua: 5, 8, 11, ... (+3). Maka angka selanjutnya adalah 11 + 3 = 14." },
             { category: "TIU", question: "Ayah : Anak = Pohon : ...", options: { A: "Akar", B: "Daun", C: "Ranting", D: "Tunas", E: "Buah" }, answer: "D", hint: "Hubungannya adalah 'induk' dan 'keturunannya' atau 'generasi barunya'.", pembahasan: "Ayah menghasilkan anak (generasi baru). Pohon menghasilkan tunas (generasi baru)." },
             { category: "TIU", question: "Jika x adalah 32, dan y = 17 * 2, maka...", options: { A: "x > y", B: "x < y", C: "x = y", D: "x = 2y", E: "Hubungan tidak dapat ditentukan" }, answer: "B", hint: "Tentukan nilai x dan y terlebih dahulu.", pembahasan: "x = 32. y = 17 * 2 = 34. Maka, x < y." },
             { category: "TIU", question: "Semua bunga harum. Sebagian yang harum tidak disukai lebah. Kesimpulannya...", options: { A: "Semua bunga tidak disukai lebah", B: "Sebagian bunga tidak disukai lebah", C: "Semua yang tidak disukai lebah adalah bunga", D: "Lebah tidak suka bunga", E: "Tidak ada kesimpulan yang benar" }, answer: "B", hint: "Gabungkan premisnya. Ada 'sebagian' dari kelompok 'harum' yang tidak disukai lebah, dan semua 'bunga' termasuk dalam kelompok 'harum'.", pembahasan: "Karena semua bunga termasuk dalam kategori 'harum', dan sebagian dari kategori 'harum' itu tidak disukai lebah, maka dapat disimpulkan bahwa setidaknya sebagian dari bunga tersebut tidak disukai lebah." },
             { category: "TIU", question: "Luas sebuah persegi panjang adalah 192 cm². Jika perbandingan panjang dan lebarnya adalah 4:3, berapa kelilingnya?", options: { A: "56 cm", B: "60 cm", C: "64 cm", D: "72 cm", E: "80 cm" }, answer: "A", hint: "Gunakan variabel perbandingan (4x dan 3x) untuk mencari nilai x dari luas.", pembahasan: "Luas = p * l -> 192 = (4x)(3x) -> 192 = 12x² -> x² = 16 -> x = 4. Maka panjang = 4*4 = 16 cm, lebar = 3*4 = 12 cm. Keliling = 2(p+l) = 2(16+12) = 2(28) = 56 cm." },
             { category: "TIU", question: "INSINUASI >< ...", options: { A: "Sindiran", B: "Tuduhan", C: "Langsung", D: "Kiasan", E: "Pujian" }, answer: "C", hint: "Insinuasi adalah tuduhan yang tidak langsung. Cari lawan katanya.", pembahasan: "Insinuasi berarti tuduhan tersembunyi, tidak langsung, atau sindiran. Lawan katanya yang paling tepat adalah 'langsung' atau 'terang-terangan'." },
-            { category: "TIU", question: "Jika 6 orang dapat menyelesaikan 6 artikel dalam 6 jam, berapa waktu yang dibutuhkan 12 orang untuk menyelesaikan 12 artikel?", options: { A: "3 jam", B: "6 jam", C: "9 jam", D: "12 jam", E: "18 jam" }, answer: "B", hint: "Perhatikan rasio orang, artikel, dan waktu.", pembahasan: "Jika 6 orang menyelesaikan 6 artikel dalam 6 jam, artinya 1 orang menyelesaikan 1 artikel dalam 6 jam. Jadi, 12 orang juga akan menyelesaikan 12 artikel dalam 6 jam, karena setiap orang mengerjakan artikelnya masing-masing secara paralel." },
+            { category: "TIU", question: "Lanjutkan seri gambar...", isFigural: true, options: { 
+                A: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3" fill="black"/></svg>`, 
+                B: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="5" cy="5" r="3" fill="black"/><circle cx="15" cy="15" r="3" fill="black"/></svg>`, 
+                C: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="5" cy="5" r="2" fill="black"/><circle cx="15" cy="5" r="2" fill="black"/><circle cx="10" cy="15" r="2" fill="black"/></svg>`, 
+                D: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="5" cy="5" r="2" fill="black"/><circle cx="15" cy="5" r="2" fill="black"/><circle cx="5" cy="15" r="2" fill="black"/><circle cx="15" cy="15" r="2" fill="black"/></svg>`, 
+                E: `<svg class="option-svg" viewBox="0 0 20 20"><circle cx="10" cy="5" r="3" fill="black"/><circle cx="10" cy="15" r="3" fill="black"/></svg>` 
+            }, answer: "D", hint: "Perhatikan jumlah dan posisi titik hitam yang bertambah.", pembahasan: "Pola seri ini adalah penambahan satu titik hitam di setiap sudut searah jarum jam. Dimulai dari kiri atas, lalu kanan atas, lalu kanan bawah. Maka langkah selanjutnya adalah penambahan titik di kiri bawah, sehingga menjadi 4 titik di setiap sudut." },
             { category: "TIU", question: "Deret: A, C, B, D, C, E, D, ...", options: { A: "E", B: "F", C: "G", D: "H", E: "C" }, answer: "B", hint: "Ada dua deret huruf yang berjalan berselang-seling.", pembahasan: "Ini adalah deret larik 2. Pola pertama: A, B, C, D,... (maju 1). Pola kedua: C, D, E, ... (maju 1). Maka angka selanjutnya adalah dari pola kedua, yaitu F." },
             { category: "TIU", question: "Semua dokter adalah orang pintar. Beberapa sarjana adalah dokter. Kesimpulannya...", options: { A: "Beberapa sarjana adalah orang pintar", B: "Semua sarjana adalah orang pintar", C: "Beberapa orang pintar bukan dokter", D: "Semua dokter adalah sarjana", E: "Tidak ada sarjana yang pintar" }, answer: "A", hint: "Gunakan logika silogisme dengan kata 'beberapa'.", pembahasan: "Karena beberapa sarjana adalah dokter, dan semua dokter adalah orang pintar, maka dapat disimpulkan bahwa beberapa sarjana tersebut adalah orang pintar." },
             { category: "TIU", question: "Berapa nilai dari 12,5% dari 512?", options: { A: "32", B: "48", C: "64", D: "72", E: "128" }, answer: "C", hint: "12,5% sama dengan 1/8.", pembahasan: "12,5% adalah 1/8. Maka (1/8) * 512 = 64." },
@@ -385,8 +416,8 @@
 
         // --- Fungsi Utama ---
         function showPage(pageId) {
-            Object.values(pages).forEach(page => page.classList.remove('active-page'));
-            pages[pageId].classList.add('active-page');
+            Object.values(pages).forEach(page => page.style.display = 'none');
+            pages[pageId].style.display = 'block';
         }
 
         function displayQuestion(index) {
@@ -396,7 +427,7 @@
             
             categoryTitleEl.textContent = question.category;
             questionNumberEl.textContent = index + 1;
-            questionTextEl.textContent = question.question;
+            questionTextEl.innerHTML = question.question; // Use innerHTML for potential figural question text
             optionsContainer.innerHTML = '';
             
             feedbackSection.classList.add('hidden');
@@ -414,7 +445,16 @@
             optionKeys.forEach(key => {
                 const value = question.options[key];
                 const optionButton = document.createElement('button');
-                optionButton.className = 'p-4 border border-gray-300 rounded-lg text-left hover:bg-indigo-50 hover:border-indigo-400 transition-colors';
+                let contentHTML = `<span class="font-bold mr-2">${key}.</span>`;
+
+                if (question.isFigural) {
+                    optionButton.className = 'p-4 border border-gray-300 rounded-lg text-center hover:bg-indigo-50 hover:border-indigo-400 transition-colors option-figural';
+                    contentHTML += value; // value is SVG string
+                } else {
+                    optionButton.className = 'p-4 border border-gray-300 rounded-lg text-left hover:bg-indigo-50 hover:border-indigo-400 transition-colors';
+                    contentHTML += value;
+                }
+                optionButton.innerHTML = contentHTML;
                 
                 if (currentTestState.answers[index]) {
                     optionButton.disabled = true;
@@ -431,7 +471,6 @@
                     optionButton.onclick = () => selectAnswer(index, key);
                 }
                 
-                optionButton.innerHTML = `<span class="font-bold mr-2">${key}.</span> ${value}`;
                 optionsContainer.appendChild(optionButton);
             });
             
@@ -440,7 +479,6 @@
                 pembahasanBox.classList.remove('hidden');
             }
             
-            // Update Next/Prev button states
             prevQuestionButton.disabled = index === 0;
             nextQuestionButton.disabled = index === TOTAL_QUESTIONS - 1;
 
@@ -677,6 +715,7 @@ Terima kasih EduNav!
             if (username.value === CORRECT_USERNAME && password.value === CORRECT_PASSWORD) {
                 if(sounds.isReady) sounds.click.triggerAttackRelease("C5", "8n");
                 loginError.classList.add('hidden');
+                sessionStorage.setItem('isLoggedIn', 'true');
                 loadHistory();
                 showPage('home');
             } else {
@@ -740,6 +779,13 @@ Terima kasih EduNav!
 
         // --- Inisialisasi Aplikasi ---
         function initializeAppLogic() {
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                loadHistory();
+                showPage('home');
+            } else {
+                showPage('login');
+            }
+
             for (let i = 0; i < TOTAL_QUESTIONS; i++) {
                 const button = document.createElement('button');
                 button.textContent = i + 1;
@@ -750,7 +796,6 @@ Terima kasih EduNav!
                 }
                 navigationGrid.appendChild(button);
             }
-            showPage('login');
         }
         
         initializeAppLogic();
